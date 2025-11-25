@@ -116,11 +116,11 @@ def cmor_update_sql():
     sql : str
         SQL style string updating cmorvar table
     """
-    cols = ['name', 'frequency', 'modeling_realm', 'standard_name',
-            'units', 'cell_methods', 'cell_measures', 'long_name',
-            'comment', 'dimensions', 'out_name', 'type', 'positive',
-            'valid_min', 'valid_max', 'flag_values', 'flag_meanings',
-            'ok_min_mean_abs', 'ok_max_mean_abs']
+    cols = ['name', 'cell_methods', 'cell_measures',
+            'comment', 'dimensions', 'frequency', 'long_name',
+            'modeling_realm', 'ok_max_mean_abs', 'ok_min_mean_abs',
+            'out_name', 'positive', 'standard_name', 'type', 'units',
+            'valid_max', 'valid_min', 'flag_meanings', 'flag_values']
     sql = f"""REPLACE INTO cmorvar ({', '.join(cols)}) VALUES
           ({','.join(['?']*len(cols))}) ON CONFLICT (name) DO UPDATE SET
           {', '.join(x+' = excluded.'+x for x in cols)}"""
@@ -479,3 +479,28 @@ def identify_patterns(files):
             mopdb_log.debug(f"identify_patterns: last identified {last_pattern}")
         n+=1
     return patterns, patpaths
+
+
+def process_table_row(name, row, alias):
+    """
+    """
+    # alter the name so it reflects also its origin
+    name = f"{name}-{alias}"
+    cols = ['cell_methods', 'cell_measures',
+            'comment', 'dimensions', 'frequency', 'long_name',
+            'modeling_realm', 'ok_max_mean_abs', 'ok_min_mean_abs',
+            'out_name', 'positive', 'standard_name', 'type', 'units',
+            'valid_max', 'valid_min']
+    values = [name]
+    for k in cols:
+        val = row[k] 
+        if isinstance(val, list):
+            values.append( " ".join(val) )
+        else:
+            values.append(val)
+    # check if flag attrs present if not add them
+    if 'flag_values' not in row.keys():
+        values = values[:-2] + ['',''] + values[-2:]
+    else:
+        values.extend([row['flag_meanings'], row['flag_values']])
+    return values

@@ -27,7 +27,7 @@ from importlib.resources import files as import_files
 from pathlib import Path
 
 from mopdb.mopdb_utils import (mapping_sql, cmorvar_sql, read_map,
-    read_map_app4, write_cmor_table, update_db) 
+    read_map_app4, write_cmor_table, update_db, process_table_row) 
 from mopdb.utils import (config_log, db_connect, query, create_table,
     delete_record, MopException)
 from mopdb.mopdb_map import (write_varlist, write_map_template,
@@ -176,7 +176,7 @@ def cmor_table(ctx, dbname, fname, alias, label):
     sql = "SELECT out_name, frequency, modeling_realm FROM cmorvar"
     results = query(conn, sql, first=False, logname='mopdb_log')
     # cmor_vars is the actual cmip variable name 
-    # this sometime differs from name used in tables tohat can distinguish different dims/freq
+    # this sometime differs from name used in tables that can distinguish different dims/freq
     cmor_vars = set(x[0] for x in results)
     # read variable list from map_ file
     vlist = read_map(fname, alias)
@@ -267,13 +267,8 @@ def update_cmor(ctx, dbname, fname, alias):
     row_dict = vardict['variable_entry']
     vars_list = []
     for name,row in row_dict.items():
-    # alter the name so it reflects also its origin
-        name = f"{name}-{alias}" 
-        values = [x for x in row.values()]
-        # check if flag attrs present if not add them
-        if 'flag_values' not in row.keys():
-            values = values[:-2] + ['',''] + values[-2:]
-        vars_list.append(tuple([name] + values))
+        values = process_table_row(name, row, alias)
+        vars_list.append(tuple(values))
     mopdb_log.debug(f"Variables list: {vars_list}")
     # check that all tuples have len == 19
     for r in vars_list:
