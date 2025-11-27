@@ -573,6 +573,10 @@ def build_filename(ctx, opts):
     if opts['timeshot'] == 'point':
         opts['frequency'] += 'Pt'
     opts['version'] = opts['version'].replace('.', '-')
+    if ctx.obj['mode'] == 'cmip6' and opts['sub_experiment_id'] is not None:
+        opts['member_id'] = f"{opts['sub_experiment_id']}-{opts['variant_label']}"
+    else:
+        opts['member_id'] = opts['variant_label']
     path_template = f"{str(ctx.obj['outpath'])}/{ctx.obj['path_template']}"
     fpath = path_template.format(**opts)
     fname = ctx.obj['file_template'].format(**opts) + f"_{opts['date_range']}" 
