@@ -41,7 +41,7 @@ from dateutil.relativedelta import relativedelta
 from mopper.calc_land import *
 from mopper.calc_atmos import *
 from mopper.calc_utils import *
-from mopper.calc_seaice import (calc_hemi_seaice, maskSeaIce, calc_sithick,
+from mopper.calc_seaice import (calc_hemi_seaice, mask_seaice, calc_sithick,
     calc_sisnconc)
 from mopper.calc_ocean import (calc_zostoga, ocean_floor, calc_overt,
     get_areacello)
