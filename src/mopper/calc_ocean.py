@@ -19,7 +19,7 @@
 # originally written for CMIP5 by Peter Uhe and dapted for CMIP6 by Chloe Mackallah
 # ( https://doi.org/10.5281/zenodo.7703469 )
 #
-# last updated 10/10/2024
+# last updated 04/12/2025
 #
 # This file contains a collection of functions to calculate ocean derived variables
 # from ACCESS model output.
@@ -58,8 +58,7 @@ R_e = 6.378E+06
 #----------------------------------------------------------------------
 
 
-@click.pass_context
-def overturn_stream(ctx, varlist, sv=False):
+def overturn_stream(obj, varlist, sv=False):
     """Returns ocean overturning mass streamfunction. 
 
     Calculation is:
@@ -68,8 +67,8 @@ def overturn_stream(ctx, varlist, sv=False):
 
     Parameters
     ----------
-    ctx : click context
-        Includes obj dict with 'cmor' settings, exp attributes
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
     varlist: list( DataArray )
         List of ocean overturning mass streamfunction variables (ty_trans vars)
         From 1-3 if gm and/or submeso are present
@@ -84,7 +83,7 @@ def overturn_stream(ctx, varlist, sv=False):
 
     :meta private:
     """
-    var_log = logging.getLogger(ctx.obj['var_log'])
+    var_log = logging.getLogger(obj['var_log'])
     londim = varlist[0].dims[3]
     depdim = varlist[0].dims[1]
     var_log.debug(f"Streamfunct lon, dep dims: {londim}, {depdim}")
@@ -110,11 +109,13 @@ def overturn_stream(ctx, varlist, sv=False):
     return stream
 
 
-def ocean_floor(var):
+def ocean_floor(obj, var):
     """Not sure.. 
 
     Parameters
     ----------
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
     var : Xarray dataset
         pot_temp variable
 
@@ -125,16 +126,19 @@ def ocean_floor(var):
 
         :meta private:
     """
+    var_log = logging.getLogger(obj['var_log'])
     lv = (~var.isnull()).sum(dim='st_ocean') - 1
     vout = var.take(lv, dim='st_ocean').squeeze()
     return vout
 
 
-def calc_global_ave_ocean(var, rho_dzt, area_t):
+def calc_global_ave_ocean(obj, var, rho_dzt, area_t):
     """Calculate global ocean mass transport.
 
     Parameters
     ----------
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
     var : Xarray dataset
         ocean variable
     rho_dzt : Xarray dataset
@@ -149,6 +153,7 @@ def calc_global_ave_ocean(var, rho_dzt, area_t):
 
     :meta private:
     """
+    var_log = logging.getLogger(obj['var_log'])
     mass = rho_dzt * area_t
     #PP would be better to get the correct dimension from variable and use them
     # rather than try and except
@@ -161,16 +166,15 @@ def calc_global_ave_ocean(var, rho_dzt, area_t):
     return vnew
 
 
-@click.pass_context
-def calc_global_ave_ocean(ctx, var, rho_dzt):
+def calc_global_ave_ocean(obj, var, rho_dzt):
     """Returns global average ocean temperature
 
     NB needs checking
 
     Parameters
     ----------
-    ctx : click context
-        Includes obj dict with 'cmor' settings, exp attributes
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
     var : xarray.DataArray
         Input variable
     rho_dzt: Xarray DataArray
@@ -183,7 +187,8 @@ def calc_global_ave_ocean(ctx, var, rho_dzt):
 
     :meta private:
     """
-    fname = f"{ctx.obj['ancils_path']}/{ctx.obj['grid_ocean']}"
+    var_log = logging.getLogger(obj['var_log'])
+    fname = f"{obj['ancils_path']}/{obj['grid_ocean']}"
     ds = xr.open_dataset(fname)
     area_t = ds['area_t'].reindex_like(rho_dzt, method='nearest')
     mass = rho_dzt * area_t
@@ -195,14 +200,13 @@ def calc_global_ave_ocean(ctx, var, rho_dzt):
     return vnew
 
 
-@click.pass_context
-def calc_overt(ctx, varlist, sv=False):
+def calc_overt(obj, varlist, sv=False):
     """Returns overturning mass streamfunction variable 
 
     Parameters
     ----------
-    ctx : click context
-        Includes obj dict with 'cmor' settings, exp attributes
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
     varlist: list( DataArray )
         List of ocean transport variables (ty_trans vars)
         From 1-3 if gm and/or submeso are present
@@ -216,10 +220,10 @@ def calc_overt(ctx, varlist, sv=False):
         overturning mass streamfunction (time, basin, depth, gridlat) variable 
 
     """
-    var_log = logging.getLogger(ctx.obj['var_log'])
+    var_log = logging.getLogger(obj['var_log'])
     var1 = varlist[0]
     vlat, vlon = var1.dims[2:]
-    mask = get_basin_mask(vlat, vlon)
+    mask = get_basin_mask(obj, vlat, vlon)
     mlat = mask.dims[0]
     mlon = mask.dims[1]
     if [mlat, mlon] != [vlat, vlon]:
@@ -229,26 +233,25 @@ def calc_overt(ctx, varlist, sv=False):
         mask = mask.sel(**{mlat:var1[vlat], mlon:var1[vlon]}, method="nearest")
     var_log.debug(f"Basin mask: {mask}")
     # first calculate for global ocean
-    glb  = overturn_stream(varlist)
+    glb  = overturn_stream(obj, varlist)
     # atlantic and arctic basin have mask values 2 and 4 #TODO double check this
     var_masked = [ v.where(mask.isin([2, 4]), 0) for v in varlist]
-    atl = overturn_stream(var_masked)
+    atl = overturn_stream(obj, var_masked)
     #Indian and Pacific basin are given by mask values 3 and 5 #TODO double check this
     var_masked = [ v.where(mask.isin([3, 5]), 0) for v in varlist]
-    ind = overturn_stream(var_masked)
+    ind = overturn_stream(obj, var_masked)
     # now add basin dimension to resulting array
     glb = glb.expand_dims(dim={'basin': ['global_ocean']}, axis=1)
     atl = atl.expand_dims(dim={'basin': ['atlantic_arctic_ocean']}, axis=1)
     ind = ind.expand_dims(dim={'basin': ['indian_pacific_ocean']}, axis=1)
     overt = xr.concat([atl, ind, glb], dim='basin', coords='minimal')
-    if ctx.obj['variable_id'][:5] == 'msfty':
+    if obj['variable_id'][:5] == 'msfty':
         overt = overt.rename({vlat: 'gridlat'})
     overt['basin'].attrs['units'] = ""
     return overt
 
 
-@click.pass_context
-def calc_zostoga(ctx, ptemp, dht):
+def calc_zostoga(obj, ptemp, dht):
     """Returns Global Average Thermosteric Sea Level Change 
     
     See https://github.com/ACCESS-Community-Hub/ACCESS-MOPPeR/issues/182
@@ -257,8 +260,8 @@ def calc_zostoga(ctx, ptemp, dht):
 
     Parameters
     ----------
-    ctx : click context
-        Includes obj dict with 'cmor' settings, exp attributes
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
     ptemp: DataArray
         Potential temperature in degrees Celsius
     dht: DataArray
@@ -270,19 +273,19 @@ def calc_zostoga(ctx, ptemp, dht):
         Global Average Thermosteric Sea Level Change (time) variable 
 
     """
-    var_log = logging.getLogger(ctx.obj['var_log'])
+    var_log = logging.getLogger(obj['var_log'])
     t, dep, la, lo = ptemp.dims
     # gsw p_from_z expect negative depths
     depth = -1*ptemp[dep]
     # get latitude from grid ancil file
     coords = ptemp.encoding['coordinates'].split()
-    lat, dum1, dum2, dum3 = get_coords(coords)
+    lat, dum1, dum2, dum3 = get_coords(obj, coords)
     # rename latitude index dimensions so they are the same as output
     ptemp_lalo = [la, lo]
     if any(x not in ptemp_lalo for x in lat.dims):
         for i,d in enumerate(lat.dims):
             lat = lat.rename({d: ptemp_lalo[i]})
-    areacello = get_areacello()
+    areacello = get_areacello(obj)
     # press is absolute pressure minus 10.1325 dbar
     press = gsw.conversions.p_from_z(depth, lat)
     # constant salinity 35.00
@@ -305,13 +308,13 @@ def calc_zostoga(ctx, ptemp, dht):
 
 
 @click.pass_context
-def get_areacello(ctx, area_t=None):
+def get_areacello(obj, area_t=None):
     """Returns areacello
 
     Parameters
     ----------
-    ctx : click context
-        Includes obj dict with 'cmor' settings, exp attributes
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
     area_t: DataArray
         area of t-cells (default None then is read from ancil file)
 
@@ -321,8 +324,8 @@ def get_areacello(ctx, area_t=None):
         areacello variable
 
     """
-    var_log = logging.getLogger(ctx.obj['var_log'])
-    fname = f"{ctx.obj['ancils_path']}/{ctx.obj['grid_ocean']}"
+    var_log = logging.getLogger(obj['var_log'])
+    fname = f"{obj['ancils_path']}/{obj['grid_ocean']}"
     ds = xr.open_dataset(fname)
     if area_t is None:
         if 'area_t' in ds.variables:
@@ -338,8 +341,7 @@ def get_areacello(ctx, area_t=None):
     return areacello
 
 
-@click.pass_context
-def get_basin_mask(ctx, lat, lon):
+def get_basin_mask(obj, lat, lon):
     """Returns first level of basin mask from lsmask ancil file.
 
     Lat, lon are used to work out which mask to use tt, uu, ut, tu
@@ -348,8 +350,8 @@ def get_basin_mask(ctx, lat, lon):
 
     Parameters
     ----------
-    ctx : click context
-        Includes obj dict with 'cmor' settings, exp attributes
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
     lat: str
         latitude coordinate name
     lon: str
@@ -362,13 +364,13 @@ def get_basin_mask(ctx, lat, lon):
 
     :meta private:
     """
-    var_log = logging.getLogger(ctx.obj['var_log'])
+    var_log = logging.getLogger(obj['var_log'])
     coords = ['t', 't']
     if 'xu' in lon:
         coords[0] = 'u'
     elif 'yu' in lat:
         coords[1] = 'u'
-    fname = f"{ctx.obj['ancils_path']}/{ctx.obj['mask_ocean']}"
+    fname = f"{obj['ancils_path']}/{obj['mask_ocean']}"
     if os.path.isfile(fname):
         ds = xr.open_dataset(fname)
     else:

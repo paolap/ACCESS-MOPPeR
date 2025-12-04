@@ -19,7 +19,7 @@
 # originally written for CMIP5 by Peter Uhe and dapted for CMIP6 by Chloe Mackallah
 # ( https://doi.org/10.5281/zenodo.7703469 )
 #
-# last updated 10/10/2024
+# last updated 04/12/2025
 #
 # This file contains a collection of utilities to help calculate derived variables
 # from ACCESS model output.
@@ -54,8 +54,7 @@ R_e = 6.378E+06
 #----------------------------------------------------------------------
 
 
-@click.pass_context
-def time_resample(ctx, var, rfrq, tdim, orig_tshot, sample='down', stats='mean'):
+def time_resample(obj, var, rfrq, tdim, orig_tshot, sample='down', stats='mean'):
     """
     Resamples the input variable to the specified frequency using
     specified statistic.
@@ -70,8 +69,8 @@ def time_resample(ctx, var, rfrq, tdim, orig_tshot, sample='down', stats='mean')
 
     Parameters
     ----------
-    ctx : click context
-        Includes obj dict with 'cmor' settings, exp attributes
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
     var : xarray.DataArray 
         Variable to resample.
     rfrq : str
@@ -100,7 +99,7 @@ def time_resample(ctx, var, rfrq, tdim, orig_tshot, sample='down', stats='mean')
         If the sample parameter is not 'up' or 'down'.
 
     """
-    var_log = logging.getLogger(ctx.obj['var_log'])
+    var_log = logging.getLogger(obj['var_log'])
     if not isinstance(var, xr.DataArray):
         raise MopException("'var' must be a valid Xarray DataArray")
     valid_stats = ["mean", "min", "max", "sum"]
@@ -137,11 +136,13 @@ def time_resample(ctx, var, rfrq, tdim, orig_tshot, sample='down', stats='mean')
     return vout
 
 
-def add_axis(var, name, value):
+def add_axis(obj, var, name, value):
     """Returns the same variable with an extra singleton axis added
 
     Parameters
     ----------
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
     var : Xarray DataArray
         Variable to modify
     name : str
@@ -155,15 +156,17 @@ def add_axis(var, name, value):
         Same variable with added axis at start
 
     """    
+    var_log = logging.getLogger(obj['var_log'])
     var = var.expand_dims(dim={name: float(value)})
     return var
 
 
-@click.pass_context
-def sum_vars(ctx, varlist):
+def sum_vars(obj, varlist):
     """Returns sum of all variables in list
     Parameters
     ----------
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
     varlist : list(xarray.DataArray)
         Variables to sum
 
@@ -180,17 +183,16 @@ def sum_vars(ctx, varlist):
     return varout
 
 
-@click.pass_context
-def rename_coord(ctx, var1, var2, ndim, override=False):
+def rename_coord(obj, var1, var2, ndim, override=False):
     """If coordinates in ndim position are different, renames var2
     coordinates as var1.
 
-    ctx : click context
-        Includes obj dict with 'cmor' settings, exp attributes
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
 
     :meta private:
     """
-    var_log = logging.getLogger(ctx.obj['var_log'])
+    var_log = logging.getLogger(obj['var_log'])
     coord1 = var1.dims[ndim]
     coord2 = var2.dims[ndim]
     if coord1 != coord2:
@@ -202,16 +204,15 @@ def rename_coord(ctx, var1, var2, ndim, override=False):
     return var2, override
 
 
-@click.pass_context
-def get_ancil_var(ctx, ancil, varname):
+def get_ancil_var(obj, ancil, varname):
     """Opens the ancillary file and get varname 
 
-    ctx : click context
-        Includes obj dict with 'cmor' settings, exp attributes
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
 
     Returns
     -------
-    ctx : click context obj
+    obj : dict obj
         Dictionary including 'cmor' settings and attributes for experiment
         Automatically passed
     var : Xarray DataArray
@@ -219,23 +220,22 @@ def get_ancil_var(ctx, ancil, varname):
 
     :meta private:
     """    
-    f = xr.open_dataset(f"{ctx.obj['ancil_path']}/" +
-            f"{ctx.obj[ancil]}")
+    f = xr.open_dataset(f"{obj['ancil_path']}/" +
+            f"{obj[ancil]}")
     var = f[varname]
 
     return var
 
 
-@click.pass_context
-def get_plev(ctx, levnum):
+def get_plev(obj, levnum):
     """Read pressure levels from .._coordinate.json file
 
-    ctx : click context
-        Includes obj dict with 'cmor' settings, exp attributes
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
 
     Returns
     -------
-    ctx : click context obj
+    obj : dict obj
         Dictionary including 'cmor' settings and attributes for experiment
         Automatically passed
     levnum : str
@@ -243,7 +243,7 @@ def get_plev(ctx, levnum):
 
     :meta private:
     """
-    fpath = f"{ctx.obj['tpath']}/{ctx.obj['_AXIS_ENTRY_FILE']}"
+    fpath = f"{obj['tpath']}/{obj['_AXIS_ENTRY_FILE']}"
     with open(fpath, 'r') as jfile:
         data = json.load(jfile)
     axis_dict = data['axis_entry']
@@ -252,14 +252,13 @@ def get_plev(ctx, levnum):
     return plev
 
 
-@click.pass_context
-def K_degC(ctx, var, inverse=False):
+def K_degC(obj, var, inverse=False):
     """Converts temperature from/to K to/from degC.
 
     Parameters
     ----------
-    ctx : click context
-        Includes obj dict with 'cmor' settings, exp attributes
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
     var : Xarray DataArray 
         temperature array
 
@@ -269,7 +268,7 @@ def K_degC(ctx, var, inverse=False):
         temperature array in degrees Celsius or Kelvin if inverse is True
 
     """    
-    var_log = logging.getLogger(ctx.obj['var_log'])
+    var_log = logging.getLogger(obj['var_log'])
     if not inverse and 'K' in var.units:
         var_log.info("temp in K, converting to degC")
         vout = var - 273.15
@@ -278,22 +277,21 @@ def K_degC(ctx, var, inverse=False):
         vout = var + 273.15
     return vout
 
-@click.pass_context
-def get_coords(ctx, coords):
+def get_coords(obj, coords):
     """Get lat/lon and their boundaries from ancil file
 
-    ctx : click context
-        Includes obj dict with 'cmor' settings, exp attributes
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
     coords : list
         List of coordinates retrieved from variable encoding 
     """
-    var_log = logging.getLogger(ctx.obj['var_log'])
+    var_log = logging.getLogger(obj['var_log'])
     # open ancil grid file to read vertices
     #PP be careful this is currently hardcoded which is not ok!
-    ancil_dir = ctx.obj.get('ancils_path', '')
-    ancil_file = ancil_dir + "/" + ctx.obj.get(f"grid_{ctx.obj['realm']}", '')
+    ancil_dir = obj.get('ancils_path', '')
+    ancil_file = ancil_dir + "/" + obj.get(f"grid_{obj['realm']}", '')
     if (ancil_file == '' or not Path(ancil_file).exists() or 
-        f"grid_{ctx.obj['realm']}" not in ctx.obj.keys()):
+        f"grid_{obj['realm']}" not in obj.keys()):
         var_log.error(f"Ancil file {ancil_file} not set or inexistent")
         raise MopException(f"Ancil file {ancil_file} not set or inexistent")
     var_log.debug(f"getting lat/lon and bnds from ancil file: {ancil_file}")
@@ -303,7 +301,7 @@ def get_coords(ctx, coords):
     cfile = import_files('mopdata').joinpath('latlon_vertices.yaml')
     with open(cfile, 'r') as yfile:
         data = yaml.safe_load(yfile)
-    ll_dict = data[ctx.obj['realm']]
+    ll_dict = data[obj['realm']]
     #ensure longitudes are in the 0-360 range.
     # first two coordinates should be lon,lat
     for c in coords[:2]:

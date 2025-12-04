@@ -1,10 +1,10 @@
 cmor_var;input_vars;calculation;units;dimensions;axes;frequency;realm;cell_methods;positive;cmor_table;version;vtype;size;nsteps;fpattern;long_name;standard_name
 sos;sss;;0.001;time nj ni;longitude latitude time;mon;ocean;area: time: mean;;MIP_OPmon;CM2;float32;432000;1200;iceh_m.;sea surface salinity;
-tos;sst;K_degC(var[0]);degC;time nj ni;longitude latitude time;mon;ocean;area: time: mean;;MIP_OPmon;CM2;float32;432000;1200;iceh_m.;sea surface temperature;
+tos;sst;K_degC(obj,var[0]);degC;time nj ni;longitude latitude time;mon;ocean;area: time: mean;;MIP_OPmon;CM2;float32;432000;1200;iceh_m.;sea surface temperature;
 siconc;aice;;1;time nj ni;longitude latitude time typesi;day;seaIce;area: time: mean;;MIP_SIday;CM2;float32;432000;37200;iceh_d.;ice area  (aggregate);sea_ice_area_fraction
 sivol;hi;;m;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;grid cell mean ice thickness;sea_ice_thickness
 simass;hi hs;var[0]*917+var[1]*330;kg m-2;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;grid cell mean ice thickness;sea_ice_amount
-simpconc;apond_ai aice;maskSeaIce(var[0],var[1]);1;time nj ni;longitude latitude time typemp;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;melt pond fraction of grid cell;area_fraction
+simpconc;apond_ai aice;mask_seaice(obj,var[0],var[1]);1;time nj ni;longitude latitude time typemp;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;melt pond fraction of grid cell;area_fraction
 sidivvel;sidivvel;;s-1;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;;CM2_mon;CM2;float32;432000;1200;iceh_m.;divergence of the sea ice velocity field (ice area weig;divergence_of_sea_ice_velocity
 sidmasstranx;sidmasstranx;;kg s-1;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;x component of snow and sea ice mass transport;sea_ice_x_transport
 sidmasstrany;sidmasstrany;;kg s-1;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;y component of snow and sea ice mass transport;sea_ice_y_transport
@@ -28,7 +28,7 @@ siforcecoriolx;siforcecoriolx;;N m-2;time nj ni;longitude latitude time;mon;seaI
 siforcecorioly;siforcecorioly;;N m-2;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;y component of Coriolis force;sea_ice_y_force_per_unit_area_due_to_coriolis_effect
 siforceintstrx;siforceintstrx;;N m-2;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;x component of internal ice stress force;sea_ice_x_internal_stress
 siforceintstry;siforceintstry;;N m-2;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;y component of internal ice stress force;sea_ice_y_internal_stress
-sifllatstop;fld_s03i234 fld_s00i031;maskSeaIce(var[0],var[1]);W m-2;time lat lon;longitude latitude time;mon;seaIce;area: time: mean;up;MIP_SImon;CM2;float32;110592;12;cw323a.pm;latent heat flux over sea ice;surface_upward_latent_heat_flux
+sifllatstop;fld_s03i234 fld_s00i031;mask_seaice(obj,var[0],var[1]);W m-2;time lat lon;longitude latitude time;mon;seaIce;area: time: mean;up;MIP_SImon;CM2;float32;110592;12;cw323a.pm;latent heat flux over sea ice;surface_upward_latent_heat_flux
 sifllwdtop;fld_s02i501 fld_s00i031;var[0]/var[1];W m-2;time lat lon;longitude latitude time;mon;seaIce;area: time: mean;down;MIP_SImon;CM2;float32;110592;12;cw323a.pm;down longwave flux over sea ice;surface_downwelling_longwave_flux_in_air
 sifllwutop;fld_s03i531 fld_s00i031;var[0]/var[1];W m-2;time lat lon;longitude latitude time;mon;seaIce;area: time: mean;down;MIP_SImon;CM2;float32;110592;12;cw323a.pm;upward longwave flux over sea ice;surface_upwelling_longwave_flux_in_air
 sifllatstop;sifllatstop;;W m-2;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;up;MIP_SImon;CM2;float32;432000;1200;iceh_m.;latent heat flux over sea ice;surface_upward_latent_heat_flux
@@ -52,7 +52,7 @@ sisaltmass;sisaltmass;;kg m-2;time nj ni;longitude latitude time;mon;seaIce;area
 sisnconc;sisnconc;;%;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;snow area fraction;surface_snow_area_fraction
 siu;siu;;m s-1;time nj ni;longitude latitude time;day;seaIce;area: time: mean;;MIP_SIday;CM2;float32;432000;37200;iceh_d.;ice x velocity component;sea_ice_x_velocity
 siv;siv;;m s-1;time nj ni;longitude latitude time;day;seaIce;area: time: mean;;MIP_SIday;CM2;float32;432000;37200;iceh_d.;ice y velocity component;sea_ice_y_velocity
-sisnhc;sisnhc;maskSeaIce(var[0],var[1]);J m-2;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;snow heat content;thermal_energy_content_of_surface_snow
+sisnhc;sisnhc;mask_seaice(obj,var[0],var[1]);J m-2;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;snow heat content;thermal_energy_content_of_surface_snow
 sisnthick;sisnthick;;m;time nj ni;longitude latitude time;day;seaIce;area: time: mean;;MIP_SIday;CM2;float32;432000;37200;iceh_d.;sea ice snow thickness;surface_snow_thickness
 sispeed;sispeed;;m s-1;time nj ni;longitude latitude time;day;seaIce;area: time: mean;;MIP_SIday;CM2;float32;432000;37200;iceh_d.;ice speed;sea_ice_speed
 sistrxdtop;sistrxdtop;;N m-2;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;down;MIP_SImon;CM2;float32;432000;1200;iceh_m.;x component of atmospheric stress on sea ice;surface_downward_x_stress
@@ -60,16 +60,16 @@ sistrxubot;sistrxubot;;N m-2;time nj ni;longitude latitude time;mon;seaIce;area:
 sistrydtop;sistrydtop;;N m-2;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;down;MIP_SImon;CM2;float32;432000;1200;iceh_m.;y component of atmospheric stress on sea ice;surface_downward_y_stress
 sistryubot;sistryubot;;N m-2;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;up;MIP_SImon;CM2;float32;432000;1200;iceh_m.;y component of ocean stress on sea ice;upward_y_stress_at_sea_ice_base
 sitempbot;sitempbot;;K;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;sea ice bottom temperature;sea_ice_basal_temperature
-sitempsnic;sitempsnic;K_degC(var[0],inverse=True);K;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;snow ice interface temperature;sea_ice_surface_temperatureCMIP6_SImon;CM2
-sitemptop;sitemptop;K_degC(var[0],inverse=True);K;time nj ni;longitude latitude time;day;seaIce;area: time: mean;;MIP_SIday;CM2;float32;432000;37200;iceh_d.;sea ice surface temperature;sea_ice_surface_temperature
+sitempsnic;sitempsnic;K_degC(obj,var[0],inverse=True);K;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;snow ice interface temperature;sea_ice_surface_temperatureCMIP6_SImon;CM2
+sitemptop;sitemptop;K_degC(obj,var[0],inverse=True);K;time nj ni;longitude latitude time;day;seaIce;area: time: mean;;MIP_SIday;CM2;float32;432000;37200;iceh_d.;sea ice surface temperature;sea_ice_surface_temperature
 sndmassmelt;sndmassmelt;var[0]*-1/1800;kg m-2 s-1;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;snow mass change from melt;surface_snow_melt_flux
 sndmasssnf;sndmasssnf;var[0]/1800;kg m-2 s-1;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;snow mass change from snow fall;snowfall_flux
 sithick;sithick;;m;time nj ni;longitude latitude time;day;seaIce;area: time: mean;;MIP_SIday;CM2;float32;432000;37200;iceh_d.;sea ice thickness;sea_ice_thickness
 siv;vvel;;m s-1;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;ice velocity (y);sea_ice_y_velocity
 siu;uvel;;m s-1;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;ice velocity (x);sea_ice_x_velocity
-sivoln;hi tarea;calc_hemi_seaice(var[0],var[1],'north');m3;time nj ni;time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;grid cell mean ice thickness;sea_ice_volume
-sivols;hi tarea;calc_hemi_seaice_area_vol(var[0],var[1],'south');m3;time nj ni;time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;grid cell mean ice thickness;sea_ice_volume
-siarean;aice tarea;calc_hemi_seaice(var[0],var[1],'north');m2;time nj ni;time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;ice area  (aggregate);sea_ice_area
-siareas;aice tarea;calc_hemi_seaice(var[0],var[1],'south');m2;time nj ni;time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;ice area  (aggregate);sea_ice_area
-siextentn;aice tarea;calc_hemi_seaice(var[0],var[1],'north',extent=True);m2;time nj ni;time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;ice area  (aggregate);sea_ice_extent
-siextents;aice tarea;calc_hemi_seaice(var[0],var[1],'south',extent=True);m2;time nj ni;time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;ice area  (aggregate);sea_ice_extent
+sivoln;hi tarea;calc_hemi_seaice(obj,var[0],var[1],'north');m3;time nj ni;time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;grid cell mean ice thickness;sea_ice_volume
+sivols;hi tarea;calc_hemi_seaice(obj,var[0],var[1],'south');m3;time nj ni;time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;grid cell mean ice thickness;sea_ice_volume
+siarean;aice tarea;calc_hemi_seaice(obj,var[0],var[1],'north');m2;time nj ni;time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;ice area  (aggregate);sea_ice_area
+siareas;aice tarea;calc_hemi_seaice(obj,var[0],var[1],'south');m2;time nj ni;time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;ice area  (aggregate);sea_ice_area
+siextentn;aice tarea;calc_hemi_seaice(obj,var[0],var[1],'north',extent=True);m2;time nj ni;time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;ice area  (aggregate);sea_ice_extent
+siextents;aice tarea;calc_hemi_seaice(obj,var[0],var[1],'south',extent=True);m2;time nj ni;time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;ice area  (aggregate);sea_ice_extent

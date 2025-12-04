@@ -66,6 +66,8 @@ cmor:
     # default=data/dreq/cmvme_all_piControl_3_3.csv
     # dreq not available for CMIP6Plus
     dreq: default
+    # Set to true to use dreq
+    # It should be False for CMIP6Plus
     force_dreq: !!bool True
     dreq_years: !!bool False
     # mapping file created with cli_db.py based on the actual model output
@@ -114,7 +116,7 @@ cmor:
     # hugemem is recommended for high resolution data and/or derived variables
     # hugemem requires a minimum of 6 cpus this is handled by the code
     queue: hugemem
-    mem_per_cpu: 30
+    mem_per_cpu: 32
     max_cpus: 24
     # Mopper uses multiprocessing to produce files in parallel, usually 1 cpu per worker
     # is a good compromise, occasionally you might want to pass a higher number

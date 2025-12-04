@@ -19,7 +19,7 @@
 # originally written for CMIP5 by Peter Uhe and dapted for CMIP6 by Chloe Mackallah
 # ( https://doi.org/10.5281/zenodo.7703469 )
 #
-# last updated 10/10/2024
+# last updated 04/12/2025
 #
 # This file contains a collection of functions to calculate seaice derived variables
 # from ACCESS model output.
@@ -30,7 +30,6 @@
 # and open a new issue on github.
 
 
-import click
 import xarray as xr
 import os
 import json 
@@ -57,12 +56,15 @@ R_e = 6.378E+06
 #----------------------------------------------------------------------
 
 
+#class IceTransportCalculations(obj):
 class IceTransportCalculations():
     """
     Functions to calculate mass transports.
 
     Parameters
     ----------
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
 
     Returns
     -------
@@ -72,13 +74,12 @@ class IceTransportCalculations():
     :meta private:
     """
 
-    @click.pass_context
-    def __init__(self, ctx):
+    def __init__(self, obj):
         fname = import_files('mopdata').joinpath('transport_lines.yaml')
         self.yaml_data = read_yaml(fname)['lines']
 
-        self.gridfile = xr.open_dataset(f"{ctx.obj['ancils_path']}/"+
-            f"{ctx.obj['grid_ice']}")
+        self.gridfile = xr.open_dataset(f"{obj['ancils_path']}/"+
+            f"{obj['grid_ice']}")
         self.lines = self.yaml_data['sea_lines']
         self.ice_lines = self.yaml_data['ice_lines']
 
@@ -486,6 +487,7 @@ class IceTransportCalculations():
         return psiu
 
 
+#class SeaIceCalculations(obj):
 class SeaIceCalculations():
     """
     Functions to calculate mass transports.
@@ -501,13 +503,12 @@ class SeaIceCalculations():
     :meta private:
     """
 
-    @click.pass_context
-    def __init__(self, ctx):
+    def __init__(self, obj):
         fname = import_files('mopdata').joinpath('transport_lines.yaml')
         self.yaml_data = read_yaml(fname)['lines']
 
-        self.gridfile = xr.open_dataset(f"{ctx.obj['ancil_path']}/" +
-            f"{ctx.obj['grid_ice']}")
+        self.gridfile = xr.open_dataset(f"{obj['ancil_path']}/" +
+            f"{obj['grid_ice']}")
         self.lines = self.yaml_data['sea_lines']
         self.ice_lines = self.yaml_data['ice_lines']
 
@@ -515,13 +516,14 @@ class SeaIceCalculations():
         self.gridfile.close()
 
 
-@click.pass_context
-def calc_hemi_seaice(ctx, invar, tarea, hemi, extent=False):
+def calc_hemi_seaice(obj, invar, tarea, hemi, extent=False):
     """Calculate seaice properties (volume, area and extent) over
     hemisphere.
 
     Parameters
     ----------
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
     invar : Xarray DataArray
         Variable to process, either fraction (aice) or volume (hi)
     tarea : Xarray DataArray
@@ -537,9 +539,9 @@ def calc_hemi_seaice(ctx, invar, tarea, hemi, extent=False):
         Sum of property over selected hemisphere
 
     """
-    var_log = logging.getLogger(ctx.obj['var_log'])
+    var_log = logging.getLogger(obj['var_log'])
     coords = invar.encoding['coordinates'].split()
-    lat, dum1, dum2, dum3 = get_coords(coords)
+    lat, dum1, dum2, dum3 = get_coords(obj, coords)
     # ancillary files uses different indices as dimensions!!!
     invar_dims = invar.dims[1:]
     if any(x not in invar_dims for x in lat.dims):
@@ -563,11 +565,13 @@ def calc_hemi_seaice(ctx, invar, tarea, hemi, extent=False):
     return vout
 
 
-def maskSeaIce(var, aice):
+def mask_seaice(obj, var, aice):
     """Mask seaice.
 
     Parameters
     ----------
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
     var : Xarray dataset
         seaice variable
     aice : Xarray dataset
@@ -579,15 +583,18 @@ def maskSeaIce(var, aice):
         masked seaice variable
 
     """
+    var_log = logging.getLogger(obj['var_log'])
     vout = var.where(aice != 0)
     return vout
 
 
-def sithick(hi, aice):
+def calc_sithick(obj, hi, aice):
     """Calculate seaice thickness.
 
     Parameters
     ----------
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
     hi : Xarray dataset
         seaice thickness
     aice : Xarray dataset
@@ -600,16 +607,19 @@ def sithick(hi, aice):
 
     :meta private:
     """
+    var_log = logging.getLogger(obj['var_log'])
     aice = aice.where(aice > 1e-3, drop=True)
     vout = hi / aice
     return vout
 
 
-def sisnconc(sisnthick):
+def calc_sisnconc(obj, sisnthick):
     """Calculate seas ice?
 
     Parameters
     ----------
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
     sisnthick : Xarray dataset
 
     Returns
@@ -618,5 +628,6 @@ def sisnconc(sisnthick):
 
     :meta private:
     """
+    var_log = logging.getLogger(obj['var_log'])
     vout = 1 - np.exp(-0.2 * 330 * sisnthick)
     return vout

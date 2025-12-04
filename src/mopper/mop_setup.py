@@ -19,7 +19,7 @@
 # originally written for CMIP5 by Peter Uhe and dapted for CMIP6 by Chloe Mackallah
 # ( https://doi.org/10.5281/zenodo.7703469 )
 #
-# last updated 01/08/2025
+# last updated 04/12/2025
 
 import os
 import shutil
@@ -382,6 +382,9 @@ def create_var_map(ctx, table, mappings, varsel, activity_id=None,
             continue
         frq = row['frequency']
         realm = row['modeling_realm']
+        # new tables can have realm as a list
+        if isinstance(realm, list):
+            realm = " ".join(realm)
         years = 'all'
         if ctx.obj['force_dreq'] and var in all_dreq:
             years = dreq_years[var]
