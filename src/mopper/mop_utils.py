@@ -1038,7 +1038,6 @@ def extract_var(obj, input_ds, in_missing):
 
         # Now try to perform the required calculation
         try:
-            log = var_log
             array = eval(obj['calculation'])
             var_log.debug(f"Variable after calculation: {array}")
         except Exception as e:

@@ -528,7 +528,6 @@ def process_row(obj, row):
         Message string from 
 
     """
-    var_log = logging.getLogger(obj['var_log'])
     pid = os.getpid()
     record = {}
     header = ['infile', 'filepath', 'filename', 'vin', 'variable_id',
