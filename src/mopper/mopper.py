@@ -26,6 +26,7 @@
 import click
 import logging
 import concurrent.futures
+import multiprocessing
 from concurrent.futures import ProcessPoolExecutor
 import os
 import subprocess
@@ -186,8 +187,9 @@ def mop_setup(ctx, cfile, debug, update):
     ctx.obj['update'] = update
     ctx = setup_env()
     manage_env()
-    #json_cv = f"{cdict['tpath']}/{cdict['_control_vocabulary_file']}"
+    #json_cv = f"{ctx.obj['tpath']}/{ctx.obj['_control_vocabulary_file']}"
     # this is temporarily hardcoded 
+    # cmor 3.13 (Dec 2025) still hardcoded!!
     json_cv = ctx.obj['tpath'] / "CMIP6_CV.json"
     fname = create_exp_json(json_cv)
     ctx.obj['json_file_path'] = fname
@@ -262,14 +264,13 @@ def mop_process(obj):
     # Open input datasets based on input files, return dict= {var: ds}
     dsin, in_units, in_missing, positive, coords = load_data(obj, path_vars)
     var1 = obj['vin'][0]
-    print("passed load-data")
 
     # Extract variable and calculation:
     var_log.info("Loading variable and calculating if needed...")
     var_log.info(f"calculation: {obj['calculation']}")
     var_log.info(f"resample: {obj['resample']}")
     try:
-        ovar, failed = extract_var(dsin, in_missing)
+        ovar, failed = extract_var(obj, dsin, in_missing)
         var_log.info("Calculation completed.")
     except Exception as e:
         mop_log.error(f"E: Unable to retrieve/calculate var for {obj['filename']}")
@@ -571,10 +572,11 @@ def pool_handler(ctx, rows, ncpus, cpuxworker):
     """
     obj = ctx.obj
     mop_log = logging.getLogger('mop_log')
+    mp_context=multiprocessing.get_context("forkserver")
     nworkers= int(ncpus/cpuxworker)
     mop_log.info(f"Calling concurrent.futures with {nworkers} workers")
-    executor = concurrent.futures.ProcessPoolExecutor(max_workers=nworkers)
-    #executor = WrapProcessPoolExecutor(max_workers=nworkers)
+    executor = concurrent.futures.ProcessPoolExecutor(max_workers=nworkers,
+        mp_context=mp_context)
     futures = []
     for row in rows:
     # Using submit with a list instead of map lets you get past the first exception

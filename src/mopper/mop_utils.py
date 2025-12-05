@@ -159,7 +159,7 @@ def get_files(obj):
             v['files'] = check_timeaxis(obj, paths, v['tdim'])
         else:
             try:
-                v['files'] = check_timestamp(paths)
+                v['files'] = check_timestamp(obj, paths)
             except Exception as e:
                 var_log.debug("get_files: using timestamp failed trying timeaxis")
                 v['files'] = check_timeaxis(obj, paths, v['tdim'])
@@ -882,7 +882,7 @@ def get_bounds(obj, ds, axis, cmor_name, ax_val=None):
             dim_bnds_val = cftime.date2num(dim_bnds_val,
                 units=obj['reference_date'],
                 calendar=obj['attrs']['calendar'])
-        inrange = check_time_bnds(dim_bnds_val, frq)
+        inrange = check_time_bnds(obj, dim_bnds_val, frq)
         if not inrange:
             calc = True
             var_log.info(f"Inherited bounds for {dim} are incorrect")

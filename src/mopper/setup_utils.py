@@ -287,7 +287,7 @@ def create_exp_json(ctx, json_cv):
     mop_log = logging.getLogger('mop_log')
     fname = ctx.obj['outpath'] / f"{ctx.obj['exp']}.json"
     attrs = ctx.obj['attrs']
-    with json_cv.open(mode='r') as f:
+    with open(json_cv, mode='r') as f:
         cv_dict = json.load(f)
     # check if source_id is present in CV as it is hardcoded
     # if present but source description is different overwrite file in custom mode
@@ -302,7 +302,7 @@ def create_exp_json(ctx, json_cv):
            raise MopException(f"source_id {at_sid} not defined in CMIP6_CV.json file")
        cv_dict['CV']['source_id'][at_sid] = {'source_id': at_sid,
            'source': at_source}
-       with json_cv.open(mode='w') as f:
+       with open(json_cv, mode='w') as f:
            json.dump(cv_dict, f, indent=4)
     # read required attributes from cv file
     # and add attributes for path and file template to required
@@ -325,15 +325,17 @@ def create_exp_json(ctx, json_cv):
             glob_attrs[k] = ctx.obj.get(k, '')
     # temporary correction until CMIP6_CV file name is not anymore hardcoded in CMOR
     glob_attrs['_control_vocabulary_file'] = f"{ctx.obj['tpath']}/CMIP6_CV.json"
+    # as of Dec2025 cmor 3.13 still hardcoded!!
     # replace {} _ and / in output templates
     glob_attrs['output_path_template'] = ctx.obj['path_template'] \
         .replace('{','<').replace('}','>').replace('/','')
     glob_attrs['output_file_template'] = ctx.obj['file_template'] \
          .replace('}_{','><').replace('}','>').replace('{','<')
-    if ctx.obj['mode'] == 'cmip6':
-        glob_attrs['experiment'] = attrs['experiment_id']
-    else:
-        glob_attrs['experiment'] = ctx.obj.get('exp','')
+    if 'experiment' not in glob_attrs.keys():
+        if ctx.obj['mode'] == 'cmip6':
+            glob_attrs['experiment'] = attrs['experiment_id']
+        else:
+            glob_attrs['experiment'] = ctx.obj.get('exp','')
     # write glob_attrs dict to json file
     # parent attrs don't seem to be included should I add them manually?
     # at least for mode = cmip6
@@ -573,7 +575,7 @@ def build_filename(ctx, opts):
     if opts['timeshot'] == 'point':
         opts['frequency'] += 'Pt'
     opts['version'] = opts['version'].replace('.', '-')
-    if ctx.obj['mode'] == 'cmip6' and opts['sub_experiment_id'] is not None:
+    if ctx.obj['mode'] == 'cmip6' and opts['sub_experiment_id'] != "none":
         opts['member_id'] = f"{opts['sub_experiment_id']}-{opts['variant_label']}"
     else:
         opts['member_id'] = opts['variant_label']
@@ -709,7 +711,7 @@ def define_file(opts, start, finish, delta, tstep, half_tstep):
             mop_log.debug(f"define_file, tend before mon adjust: {tend}")
             ndays = monthrange(tend.year, tend.month)[1] 
             mop_log.debug(f"define_file, tend ndays: {ndays}")
-            half_end = relativedelta(days=ndays/2.0)
+            half_end = relativedelta(days=(ndays/2.0 + 1))
             tend = start + delta - tstep + half_end
             mop_log.debug(f"define_file, tend after mon adjust: {tend}")
     opts['tstart'] = tstart.strftime('%4Y%m%dT%H%M')

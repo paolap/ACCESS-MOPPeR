@@ -478,6 +478,7 @@ def manage_env(ctx):
     # copy tables to working directory
     # check if present in tables_path or copy from packaged data
     # copy CV file as CMIP6_CV.json (remove when cmor bug is fixed)
+    # cmor 3.13 (Dec 2025) still hardcoded
     for f in ['_AXIS_ENTRY_FILE', '_FORMULA_VAR_FILE', 'grids',
          '_control_vocabulary_file']:
         fpath = ctx.obj['tables_path'] / ctx.obj[f]
@@ -491,6 +492,7 @@ def manage_env(ctx):
                  fpath = workdir / "tables/CMIP6_CV.json"
         else:
             fname = ctx.obj[f]
+    #    fname = ctx.obj[f]
         shutil.copyfile(fpath, ctx.obj['tpath'] / fname)
     update_code = import_files('mopdata').joinpath("update_db.py.txt")
     shutil.copyfile(update_code, ctx.obj['outpath'] / "update_db.py")
