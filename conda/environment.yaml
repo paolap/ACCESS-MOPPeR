@@ -9,7 +9,7 @@ dependencies:
   - python #=3.11
   - click
   - xarray>=2024.05.0
-  - cmor  #=3.11.0
+  - cmor  #=3.13.0
   - numpy
   - dask
   - pyyaml

@@ -575,10 +575,11 @@ def build_filename(ctx, opts):
     if opts['timeshot'] == 'point':
         opts['frequency'] += 'Pt'
     opts['version'] = opts['version'].replace('.', '-')
-    if ctx.obj['mode'] == 'cmip6' and opts['sub_experiment_id'] != "none":
-        opts['member_id'] = f"{opts['sub_experiment_id']}-{opts['variant_label']}"
-    else:
-        opts['member_id'] = opts['variant_label']
+    if ctx.obj['mode'] == 'cmip6':
+        if opts['sub_experiment_id'] != "none":
+            opts['member_id'] = f"{opts['sub_experiment_id']}-{opts['variant_label']}"
+        else:
+            opts['member_id'] = opts['variant_label']
     path_template = f"{str(ctx.obj['outpath'])}/{ctx.obj['path_template']}"
     fpath = path_template.format(**opts)
     fname = ctx.obj['file_template'].format(**opts) + f"_{opts['date_range']}" 
@@ -711,7 +712,7 @@ def define_file(opts, start, finish, delta, tstep, half_tstep):
             mop_log.debug(f"define_file, tend before mon adjust: {tend}")
             ndays = monthrange(tend.year, tend.month)[1] 
             mop_log.debug(f"define_file, tend ndays: {ndays}")
-            half_end = relativedelta(days=(ndays/2.0 + 1))
+            half_end = relativedelta(days=ndays/2.0)
             tend = start + delta - tstep + half_end
             mop_log.debug(f"define_file, tend after mon adjust: {tend}")
     opts['tstart'] = tstart.strftime('%4Y%m%dT%H%M')
