@@ -16,7 +16,7 @@
 #
 # contact: paola.petrelli@utas.edu.au
 #
-# last updated 03/10/2024
+# last updated 08/12/2025
 #
 
 import logging
@@ -339,9 +339,7 @@ def add_var(vlist, vobj, match, stdnm=False):
     # assign cmor_var from match and swap place with input_vars
     mopdb_log.debug(f"Assign cmor_var: {match}")
     mopdb_log.debug(f"initial variable definition: {vobj}")
-    print(match)
     var = MapVariable(match, vobj)
-    print(var.axes)
     if stdnm: 
         var.input_vars = vobj.name
         if len(var.cmor_var) == 1:
@@ -383,8 +381,6 @@ def potential_vars(conn, vobjs, stash_vars, version):
         results = query(conn, sql, first=False, logname='mopdb_log')
         mopdb_log.debug(f"In potential: var {v.name}, db results {results}")
         for r in results:
-            if 'typebare' in r[2]:
-                print(r)
             allinput = r[1].split(" ")
             mopdb_log.debug(f"{len(allinput)> 1}")
             mopdb_log.debug(all(f"{x}-{v.frequency}" in stash_vars for x in allinput))
@@ -394,9 +390,6 @@ def potential_vars(conn, vobjs, stash_vars, version):
                 if r[5] == version and r[3] == v.frequency:
                    pot_full = add_var(pot_full, v, r)
                 else:
-                    if 'typebare' in r[2]:
-                         print(r)
-                         print(v)
                     pot_part = add_var(pot_part, v, r)
                 pot_varnames.add(r[0])
     return pot_full, pot_part, pot_varnames

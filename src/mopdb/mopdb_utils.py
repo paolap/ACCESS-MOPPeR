@@ -16,7 +16,7 @@
 #
 # contact: paola.petrelli@utas.edu.au
 #
-# last updated 08/10/2024
+# last updated 08/12/2025
 #
 
 import logging
@@ -159,7 +159,7 @@ def update_db(conn, table, rows_list):
     return
 
 
-def cmor_table_header(name, realm, frequency):
+def cmor_table_header(name, frequency):
     """
     """
     today = date.today()
@@ -167,18 +167,17 @@ def cmor_table_header(name, realm, frequency):
                 'day': "1.0", '6hr': "0.25", '3hr': "0.125",
                 '1hr': "0.041667", '10min': "0.006944", 'fx': "0.0"}
     header = {
-        "data_specs_version": "01.00.33",
-        "cmor_version": "3.5",
-        "table_id": f"Table {name}",
-        "realm": realm,
-        "table_date": today.strftime("%d %B %Y"),
-        "missing_value": "1e20",
-        "int_missing_value": "-999",
-        "product": "model-output",
+        "Conventions": "CF-1.7 ACDD1.3",
         "approx_interval": interval[frequency],
+        "checksum": "",
+        "cmor_version": "3.13.0",
+        "data_specs_version": "6.5.0.0",
         "generic_levels": "",
-        "mip_era": "",
-        "Conventions": "CF-1.7 ACDD1.3"
+        "int_missing_value": "-999",
+        "missing_value": "1e20",
+        "product": "model-output",
+        "table_date": today.strftime("%d %B %Y"),
+        "table_id": f"Table {name}",
     }
     return header
 
@@ -187,14 +186,7 @@ def write_cmor_table(var_list, name):
     """
     """
     mopdb_log = logging.getLogger('mopdb_log')
-    realms = [v[2] for v in var_list]
-    setr = set(realms)
-    if len(setr) > 1:
-        realm = Counter(realms).most_common(1)[0][0]
-        mopdb_log.info(f"More than one realms found for variables: {setr}")
-        mopdb_log.info(f"Using: {realm}")
-    else:
-        realm = realms[0]
+    print(var_list[0])
     freqs = [v[1] for v in var_list]
     setf = set(freqs)
     if len(setf) > 1:
@@ -203,7 +195,7 @@ def write_cmor_table(var_list, name):
         mopdb_log.info(f"Using: {frequency}")
     else:
         frequency = freqs[0]
-    header = cmor_table_header(name, realm, frequency)
+    header = cmor_table_header(name, frequency)
     out = {"Header": header, "variable_entry": []}
     keys = ["frequency", "modeling_realm",
             "standard_name", "units",
@@ -214,6 +206,8 @@ def write_cmor_table(var_list, name):
             "ok_min_mean_abs", "ok_max_mean_abs"] 
     var_dict = {}
     for v in var_list:
+        # convert realm to list
+        v[2] = v[2].split(" ")
         var_dict[v[0]] = dict(zip(keys, v[1:]))
     out["variable_entry"] = var_dict
     jfile = f"CMOR_{name}.json"
