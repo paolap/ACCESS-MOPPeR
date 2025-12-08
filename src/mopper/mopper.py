@@ -286,6 +286,7 @@ def mop_process(obj):
     bounds_list = require_bounds(obj)
     # get axis of each dimension
     axes = get_axis_dim(obj, ovar)
+    var_log.info(f"Setting cmor table: {tables[1]}")
     cmor.set_table(tables[1])
     axis_ids = []
     z_ids = []
