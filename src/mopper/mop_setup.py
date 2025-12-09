@@ -151,7 +151,7 @@ def find_nearest(varlist, frequency):
         freq = frequency.replace('C','')
     resample_order = ['10yr', 'yr', 'mon', '10day', '7day',
             'day', '12hr', '6hr', '3hr', '1hr', '30min', '10min']
-    resample_frq = {'10yr': '10Y', 'yr': 'Y', 'mon': 'M', '10day': '10D',
+    resample_frq = {'10yr': '10Y', 'yr': 'Y', 'mon': 'ME', '10day': '10D',
                     '7day': '7D', 'day': 'D', '12hr': '12h', '6hr': '6h',
                     '3hr': '3h', '1hr': 'h', '30min': '30min'}
     freq_idx = resample_order.index(freq)

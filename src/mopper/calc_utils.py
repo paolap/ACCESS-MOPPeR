@@ -108,19 +108,21 @@ def time_resample(obj, var, rfrq, tdim, orig_tshot, sample='down', stats='mean')
         raise MopException(f"{stats} not in valid list: {valid_stats}.")
     offset = {'30m': [15, 'min'], 'h': [30, 'min'], '3h': [90, 'min'],
               '6h': [3, 'h'], '12h': [6, 'h'], 'D': [12, 'h'],
-              '7D': [84, 'h'], '10D': [5, 'D'], 'M': [15, 'D'],
+              '7D': [84, 'h'], '10D': [5, 'D'], 'ME': [15, 'D'],
               'Y': [6, 'M'], '10Y': [5, 'Y']}
     if sample == "down":
         try:
-            vout = var.resample({tdim: rfrq}, origin="start_day",
-                                closed="right")
+            #vout = var.resample({tdim: rfrq}, origin="start_day",
+            #                    closed="right")
+            # testing new settings
+            vout = var.resample({tdim: rfrq}, origin="start")
             method = getattr(vout, stats)
             vout = method()
-            # apply negative offset if original timeshot is point
+            # apply negative offset if original timeshot is not point
             if orig_tshot != 'point':
                 half, tunit = offset[rfrq][:]
                 vout = vout.assign_coords({tdim:
-                    xr.CFTimeIndex(vout[tdim].values).shift(half, tunit)})
+                    xr.CFTimeIndex(vout[tdim].values).shift(-half, tunit)})
         except Exception as e:
             var_log.error(f"Resample error: {e}")
             raise MopException(f"{e}")

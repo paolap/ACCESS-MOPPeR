@@ -730,6 +730,29 @@
             "z_bounds_factors": "a: lev_bnds b: b_bnds orog: orog",
             "z_factors": "a: lev b: b orog: orog"
         },
+	        "hybrid_height2": {
+            "standard_name": "atmosphere_hybrid_height_coordinate",
+            "units": "m",
+            "axis": "Z",
+            "long_name": "hybrid height coordinate",
+            "climatology": "",
+            "formula": "",
+            "must_have_bounds": "yes",
+            "out_name": "lev",
+            "positive": "up",
+            "requested": "",
+            "requested_bounds": "",
+            "stored_direction": "increasing",
+            "tolerance": "",
+            "type": "",
+            "valid_max": "",
+            "valid_min": "0.0",
+            "value": "",
+            "z_bounds_factors": "",
+            "z_factors": "",
+            "bounds_values": "",
+            "generic_level_name": "alevel"
+        },
         "hybrid_height_half": {
             "axis": "Z",
             "bounds_values": "",
@@ -3229,16 +3252,5 @@
             "z_bounds_factors": "",
             "z_factors": ""
         }
-    },
-    "version_metadata": {
-        "version_tag": "v6.5.0.1",
-        "checksum": "md5: feb75313474f3aa81a4032636ad2a4ee",
-        "Auxillary_files/MIP_coordinate_modified": "Thu Feb 29 16:22:42 2024 +0000",
-        "Auxillary_files/MIP_coordinate_note": "Updating versioning and model_components scripts to process files individually.",
-        "commit": "52fca0fb9865167e687d8391308fc134a1e54d24",
-        "previous_commit": "",
-        "author": "Daniel Ellis",
-        "CV_collection_version": "v6.5.1.1",
-        "specs_doc": "v6.5.0"
     }
 }
