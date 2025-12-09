@@ -113,11 +113,15 @@ cmor:
     # walltime in "hh:mm:ss"
     walltime: '8:00:00'
     mode: custom
-    # conda_env to use by default hh5 analysis3-unstable
-    # as this has the code and all dependecies installed
-    # you can override that by supplying the env to pass to "source"
-    # Ex 
-    # conda_env: <custom-env-path>/bin/activate
+    # if default uses xp62 conda env
+    # conda_env to use by default xp62 analysis3
+    # code needs to be installed by user
+    # you can override that by supplying a custom env
+    # Ex
+    # conda_env: <custom-env-path>
+    # will add
+    # "source ~/.bashrc
+    # conda activate <custom-env>
     # to allow other settings use "test: true" and modify mopper_job.sh manually
     conda_env: default
     

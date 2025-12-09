@@ -772,8 +772,8 @@ def define_template(ctx, flag, nrows):
 # see https://github.com/ACCESS-Community-Hub/ACCESS-MOPPeR/blob/main/requirements.txt
 # for a list of packages
 
-module use /g/data/xp65/public/modules
-module load conda/analysis3
+#module use /g/data/xp65/public/modules
+#module load conda/analysis3
 {ctx.obj['conda_env']}
 
 cd {ctx.obj['appdir']}
