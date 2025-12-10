@@ -37,7 +37,7 @@ hus8;fld_s30i295;;1;time pressure lat lon;longitude latitude plev8 time;day;atmo
 huss;fld_s03i237;;1;time lat lon;longitude latitude time height1.5m;mon;atmos;area: time: mean;;CM2_mon;ESM1.5;float32;110592;12;cw323a.pm;SPECIFIC HUMIDITY  AT 1.5M;specific_humidity
 huss;fld_s03i237;;1;time lat lon;longitude latitude time height2m;mon;atmos;area: time: mean;;MIP_APmon;ESM1.5;float32;110592;12;cw323a.pm;SPECIFIC HUMIDITY  AT 1.5M;specific_humidity
 huss;fld_s03i237;;1;time lat lon;longitude latitude time height1.5m;3hrPt;atmos;area: time: point;;CM2_3hr;ESM1.5;float32;110592;578880;cm000a.p8;SPECIFIC HUMIDITY  AT 1.5M;specific_humidity
-huss;fld_s03i237;;1;time lat lon;longitude latitude time height2m;3hrPt;atmos;area: time: point;;MIP_AP3hrPt;ESM1.5;float32;110592;578880;cm000a.p8;SPECIFIC HUMIDITY  AT 1.5M;specific_humidity
+huss;fld_s03i237;;1;time lat lon;longitude latitude time1 height2m;3hrPt;atmos;area: time: point;;MIP_AP3hrPt;ESM1.5;float32;110592;578880;cm000a.p8;SPECIFIC HUMIDITY  AT 1.5M;specific_humidity
 huss;fld_s03i237;;1;time lat lon;longitude latitude time height1.5m;day;atmos;area: time: mean;;CM2_day;ESM1.5;float32;110592;74772;cm000a.pd;SPECIFIC HUMIDITY  AT 1.5M;specific_humidity
 huss;fld_s03i237;;1;time lat lon;longitude latitude time height2m;day;atmos;area: time: mean;;MIP_APday;ESM1.5;float32;110592;74772;cm000a.pd;SPECIFIC HUMIDITY  AT 1.5M;specific_humidity
 hus19uvgrid;fld_s30i205;;1;time pressure lat_v lon_u;gridlongitude gridlatitude plev19 time;mon;atmos;area: time: mean;;CM2_mon;ESM1.5;float32;2115840;12;cw323a.pm;SPECIFIC HUMIDITY ON P LEV/UV GRID;specific_humidity
@@ -126,7 +126,7 @@ ta8;fld_s30i294;;K;time pressure lat lon;longitude latitude plev8 time;day;atmos
 tas;fld_s03i236;;K;time lat lon;longitude latitude time height1.5m;mon;atmos;area: time: mean;;CM2_mon;ESM1.5;float32;110592;12;cw323a.pm;TEMPERATURE AT 1.5M;air_temperature
 tas;fld_s03i236;;K;time lat lon;longitude latitude time height2m;mon;atmos;area: time: mean;;MIP_APmon;ESM1.5;float32;110592;12;cw323a.pm;TEMPERATURE AT 1.5M;air_temperature
 tas;fld_s03i236;;K;time lat lon;longitude latitude time height1.5m;3hrPt;atmos;area: time: point;;CM2_3hr;ESM1.5;float32;110592;578880;cm000a.p8;TEMPERATURE AT 1.5M;air_temperature
-tas;fld_s03i236;;K;time lat lon;longitude latitude time height2m;3hrPt;atmos;area: time: point;;MIP_AP3hrPt;ESM1.5;float32;110592;578880;cm000a.p8;TEMPERATURE AT 1.5M;air_temperature
+tas;fld_s03i236;;K;time lat lon;longitude latitude time1 height2m;3hrPt;atmos;area: time: point;;MIP_AP3hrPt;ESM1.5;float32;110592;578880;cm000a.p8;TEMPERATURE AT 1.5M;air_temperature
 tas;fld_s03i236;;K;time lat lon;longitude latitude time height1.5m;day;atmos;area: time: mean;;CM2_day;ESM1.5;float32;110592;74772;cm000a.pd;TEMPERATURE AT 1.5M;air_temperature
 tas;fld_s03i236;;K;time lat lon;longitude latitude time height2m;day;atmos;area: time: mean;;MIP_APday;ESM1.5;float32;110592;74772;cm000a.pd;TEMPERATURE AT 1.5M;air_temperature
 tasmax;fld_s03i236_max;;K;time lat lon;longitude latitude time height1.5m;day;atmos;area: time: maximum;;CM2_day;ESM1.5;float32;110592;74772;cm000a.pd;TEMPERATURE AT 1.5M;air_temperature

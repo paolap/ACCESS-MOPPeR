@@ -20,14 +20,14 @@
 # ( https://doi.org/10.5281/zenodo.7703469 ) 
 # Github: https://github.com/ACCESS-Hive/ACCESS-MOPPeR
 #
-# last updated 04/12/2025
+# last updated 10/12/2025
 
 
 import click
 import logging
 import concurrent.futures
 import multiprocessing
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures.process import ProcessPoolExecutor
 import os
 import subprocess
 import sys
@@ -256,8 +256,15 @@ def mop_process(obj):
         cmor.set_cur_dataset_attribute(k, v)
     # Load the CMIP/custom tables
     tables = []
-    tables.append(cmor.load_table(f"{obj['tpath']}/{obj['grids']}"))
-    tables.append(cmor.load_table(f"{obj['tpath']}/{obj['table']}.json"))
+    try:
+        tables.append(cmor.load_table(f"{obj['tpath']}/{obj['grids']}"))
+        var_log.info("Uploaded cmor grid table.")
+        tables.append(cmor.load_table(f"{obj['tpath']}/{obj['table']}.json"))
+        var_log.info("Uploaded cmor variable table.")
+    except Exception as e:
+        mop_log.error(f"E: Unable to upload cmor tables for {obj['filename']}")
+        var_log.error(f"E: Unable to upload cmor tables because of: {e}")
+        return 4 
 
     # Select files to use and associate a path, time dim to each input variable
     path_vars = get_files(obj)
@@ -287,7 +294,7 @@ def mop_process(obj):
     # get axis of each dimension
     axes = get_axis_dim(obj, ovar)
     var_log.info(f"Setting cmor table: {tables[1]}")
-    cmor.set_table(tables[1])
+    cmor.set_table(tables[0])
     axis_ids = []
     z_ids = []
     time_dim = None
@@ -303,26 +310,37 @@ def mop_process(obj):
         if cmor_tName in bounds_list:
             t_bounds = get_bounds(obj, dsin[var1], axes['t_ax'], cmor_tName,
                 ax_val=t_ax_val)
-        t_ax_id = cmor.axis(table_entry=cmor_tName,
-            units=obj['reference_date'],
-            length=len(t_ax_val),
-            coord_vals=t_ax_val,
-            cell_bounds=t_bounds,
-            interval=None)
-        axis_ids.append(t_ax_id)
+        try:
+            t_ax_id = cmor.axis(table_entry=cmor_tName,
+                units=obj['reference_date'],
+                length=len(t_ax_val),
+                coord_vals=t_ax_val,
+                cell_bounds=t_bounds,
+                interval=None)
+            axis_ids.append(t_ax_id)
+        except Exception as e:
+            mop_log.error(f"E: Unable to set time axis for {obj['filename']}")
+            var_log.error(f"E: Unable to set time axis because: {e}")
+            return 5
     if axes['z_ax'] is not None:
         zlen = len(axes['z_ax'])
         cmor_zName = get_cmorname(obj, axes['z_ax'].name)
         z_bounds = None
         if cmor_zName in bounds_list:
             z_bounds = get_bounds(obj, dsin[var1], axes['z_ax'], cmor_zName)
-        z_ax_id = cmor.axis(table_entry=cmor_zName,
-            units=axes['z_ax'].units,
-            length=zlen,
-            coord_vals=axes['z_ax'].values,
-            cell_bounds=z_bounds,
-            interval=None)
-        axis_ids.append(z_ax_id)
+        try:
+            print(axes['z_ax'].units)
+            z_ax_id = cmor.axis(table_entry=cmor_zName,
+                units=axes['z_ax'].units,
+                length=zlen,
+                coord_vals=axes['z_ax'].values,
+                cell_bounds=z_bounds,
+                interval=None)
+            axis_ids.append(z_ax_id)
+        except Exception as e:
+            mop_log.error(f"E: Unable to set Z axis for {obj['filename']}")
+            var_log.error(f"E: Unable to set Z axis because: {e}")
+            return 5
     if axes['p_ax'] != []:
         for p_ax in axes['p_ax']:
             cmor_pName = get_cmorname(obj, 'p')
@@ -333,20 +351,30 @@ def mop_process(obj):
             punits = p_ax.units
             if punits == "":
                 avals = avals.astype(str) 
-            p_ax_id = cmor.axis(table_entry=cmor_pName,
-               units=punits,
-               length=len(p_ax),
-               coord_vals=avals,
-               cell_bounds=p_bounds,
-               interval=None)
-            axis_ids.append(p_ax_id)
+            try:
+                p_ax_id = cmor.axis(table_entry=cmor_pName,
+                    units=punits,
+                    length=len(p_ax),
+                    coord_vals=avals,
+                    cell_bounds=p_bounds,
+                    interval=None)
+                axis_ids.append(p_ax_id)
+            except Exception as e:
+                mop_log.error(f"E: Unable to set pseudo axis for {obj['filename']}")
+                var_log.error(f"E: Unable to set pseudo axis because: {e}")
+                return 5
     # if both i, j are defined call setgrid, if only one treat as lat/lon
     
     if axes['i_ax'] is not None and axes['j_ax'] is not None:
         var_log.debug(f"Setting grid with {axes['j_ax']}, {axes['i_ax']}")
         setgrid = True
-        j_id = ij_axis(obj, axes['j_ax'], 'j_index', tables[0])
-        i_id = ij_axis(obj, axes['i_ax'], 'i_index', tables[0])
+        try:
+            j_id = ij_axis(obj, axes['j_ax'], 'j_index', tables[0])
+            i_id = ij_axis(obj, axes['i_ax'], 'i_index', tables[0])
+        except Exception as e:
+            mop_log.error(f"E: Unable to set i/j axis for {obj['filename']}")
+            var_log.error(f"E: Unable to set i/j axis because: {e}")
+            return 5
     elif axes['j_ax'] is not None:
         axes['lat_ax'] = axes['j_ax']
     elif axes['i_ax'] is not None:
@@ -354,23 +382,33 @@ def mop_process(obj):
     # Define the spatial grid if non-cartesian grid
     if setgrid:
         lat, lat_bnds, lon, lon_bnds = get_coords(obj, coords)
-        grid_id = define_grid(obj, j_id, i_id, lat.values,
-            lat_bnds.values, lon.values, lon_bnds.values)
+        try:
+            grid_id = define_grid(obj, j_id, i_id, lat.values,
+                lat_bnds.values, lon.values, lon_bnds.values)
+        except Exception as e:
+            mop_log.error(f"E: Unable to set grid for {obj['filename']}")
+            var_log.error(f"E: Unable to set grid because: {e}")
+            return 5
     else:
-        if axes['glat_ax'] is not None:
-            lat_id = ll_axis(obj, axes['glat_ax'], 'gridlat', dsin[var1],
+        try:
+            if axes['glat_ax'] is not None:
+                lat_id = ll_axis(obj, axes['glat_ax'], 'gridlat', dsin[var1],
                              tables[1], bounds_list)
-            axis_ids.append(lat_id)
-        elif axes['lat_ax'] is not None:
-            lat_id = ll_axis(obj, axes['lat_ax'], 'lat', dsin[var1],
-                tables[1], bounds_list)
-            axis_ids.append(lat_id)
-            z_ids.append(lat_id)
-        if axes['lon_ax'] is not None:
-            lon_id = ll_axis(obj, axes['lon_ax'], 'lon', dsin[var1],
-                tables[1], bounds_list)
-            axis_ids.append(lon_id)
-            z_ids.append(lon_id)
+                axis_ids.append(lat_id)
+            elif axes['lat_ax'] is not None:
+                lat_id = ll_axis(obj, axes['lat_ax'], 'lat', dsin[var1],
+                    tables[1], bounds_list)
+                axis_ids.append(lat_id)
+                z_ids.append(lat_id)
+            if axes['lon_ax'] is not None:
+                lon_id = ll_axis(obj, axes['lon_ax'], 'lon', dsin[var1],
+                    tables[1], bounds_list)
+                axis_ids.append(lon_id)
+                z_ids.append(lon_id)
+        except Exception as e:
+            mop_log.error(f"E: Unable to set lat/lon axis for {obj['filename']}")
+            var_log.error(f"E: Unable to set lat/lon axis because: {e}")
+            return 5
     if setgrid:
         axis_ids.append(grid_id)
         z_ids.append(grid_id)
@@ -404,20 +442,25 @@ def mop_process(obj):
     var_log.info("Writing...")
     var_log.info(f"Variable shape is {ovar.shape}")
     status = None
-    # Write timesteps separately if variable potentially exceeding memory
-    if float(obj['file_size']) > 4000.0 and time_dim is not None:
-        for i in range(ovar.shape[0]):
-            data = ovar.isel({time_dim: i}).values
-            status = cmor.write(variable_id, data, ntimes_passed=1)
-            del data
-    else:
-        status = cmor.write(variable_id, ovar.values)
-    if status != 0:
-        mop_log.error(f"Unable to write the CMOR variable: {obj['filename']}\n")
-        var_log.error("Unable to write the CMOR variable to file\n"
-                      + f"See cmor log, status: {status}")
+    try:
+        # Write timesteps separately if variable potentially exceeding memory
+        if float(obj['file_size']) > 4000.0 and time_dim is not None:
+            for i in range(ovar.shape[0]):
+                data = ovar.isel({time_dim: i}).values
+                status = cmor.write(variable_id, data, ntimes_passed=1)
+                del data
+        else:
+            status = cmor.write(variable_id, ovar.values)
+        if status != 0:
+            mop_log.error(f"Unable to write the CMOR variable: {obj['filename']}\n")
+            var_log.error("Unable to write the CMOR variable to file\n"
+                + f"See cmor log, status: {status}")
+            return 2
+        var_log.info("Finished writing")
+    except Exception as e:
+        mop_log.error(f"Unable to write the CMOR variable {obj['filename']}")
+        var_log.error(f"Unable to write the CMOR variable {e}")
         return 2
-    var_log.info("Finished writing")
     # Close the CMOR file.
     path = cmor.close(variable_id, file_name=True)
     return path
@@ -480,6 +523,12 @@ def process_file(obj, row):
             status = "cmor_error"
         elif ret == 3:
             msg = "Cmor write failed\n"
+            status = "cmor_error"
+        elif ret == 4:
+            msg = "Cmor upload_table failed\n"
+            status = "cmor_error"
+        elif ret == 5:
+            msg = "Cmor axis failed\n"
             status = "cmor_error"
         elif ret == -1:
             msg = f"Could not process file for variable: {var_msg}\n"
@@ -594,5 +643,6 @@ def pool_handler(ctx, rows, ncpus, cpuxworker):
             mop_log.info(f"{future.result()}")
             result_futures.append(future.result())
         except concurrent.futures.process.BrokenProcessPool:
+            result_futures.append(future.exception())
             mop_log.info("process broken")
     return result_futures

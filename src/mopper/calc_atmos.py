@@ -19,7 +19,7 @@
 # originally written for CMIP5 by Peter Uhe and dapted for CMIP6 by Chloe Mackallah
 # ( https://doi.org/10.5281/zenodo.7703469 )
 #
-# last updated 04/12/2025
+# last updated 10/12/2025
 #
 # This file contains a collection of functions to calculate atmospheric
 # derived variables from ACCESS model output.
@@ -271,6 +271,7 @@ def level_to_height(obj, var, levs=None):
     zdim = var.dims[1]
     zdim_height = zdim.replace('number', 'height').replace('model_','')
     var = var.swap_dims({zdim: zdim_height})
+    var_log.debug(f"{var[zdim_height].attrs}")
     if levs is not None:
         var = var.isel({zdim_height: slice(int(levs[0]), int(levs[1]))})
     return var

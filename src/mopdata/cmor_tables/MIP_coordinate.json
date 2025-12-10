@@ -730,7 +730,7 @@
             "z_bounds_factors": "a: lev_bnds b: b_bnds orog: orog",
             "z_factors": "a: lev b: b orog: orog"
         },
-	        "hybrid_height2": {
+	    "hybrid_height2": {
             "standard_name": "atmosphere_hybrid_height_coordinate",
             "units": "m",
             "axis": "Z",
@@ -775,6 +775,29 @@
             "value": "",
             "z_bounds_factors": "",
             "z_factors": "a: lev b: b orog: orog"
+        },
+        "hybrid_height_half2": {
+            "axis": "Z",
+            "bounds_values": "",
+            "climatology": "",
+            "formula": "",
+            "generic_level_name": "alevhalf",
+            "long_name": "hybrid height coordinate",
+            "must_have_bounds": "no",
+            "out_name": "lev",
+            "positive": "up",
+            "requested": "",
+            "requested_bounds": "",
+            "standard_name": "atmosphere_hybrid_height_coordinate",
+            "stored_direction": "increasing",
+            "tolerance": "",
+            "type": "",
+            "units": "m",
+            "valid_max": "",
+            "valid_min": "0.0",
+            "value": "",
+            "z_bounds_factors": "",
+            "z_factors": ""
         },
         "iceband": {
             "axis": "",

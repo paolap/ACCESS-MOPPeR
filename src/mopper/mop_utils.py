@@ -19,7 +19,7 @@
 # originally written for CMIP5 by Peter Uhe and dapted for CMIP6 by Chloe Mackallah
 # ( https://doi.org/10.5281/zenodo.7703469 )
 #
-# last updated 04/12/2025
+# last updated 10/12/2025
 
 import numpy as np
 import re
@@ -127,6 +127,25 @@ def _preselect(ds, varlist):
     return ds[varsel]
 
 
+def add_tolerance(obj, interval):
+    """Return start and end time string with added tolerance
+
+    Parameters
+    ----------
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
+    interval : str
+        String of form <frequency=#> to pass to relativedelta (i.e. 'days=3')
+    Returns
+    """
+    tol = eval(f"relativedelta({interval})")
+    ts = datetime.strptime(obj['tstart'], '%Y%m%dT%H%M') - tol
+    te = datetime.strptime(obj['tend'], '%Y%m%dT%H%M') + tol
+    tstart = ts.strftime('%4Y%m%dT%H%M')
+    tend = te.strftime('%4Y%m%dT%H%M') 
+    return tstart, tend
+
+
 def get_files(obj):
     """Returns all files in time range
 
@@ -136,6 +155,8 @@ def get_files(obj):
      4) If last step fails or multiple time axis are present reads first and
        last timestep from each file
  
+    Parameters
+    ----------
     obj : dict
         click context obj dict with 'cmor' settings, exp attributes
     Returns
@@ -180,6 +201,8 @@ def find_all_files(obj):
     and/or time information in the filename.
     Check that all variables needed are in file, otherwise add extra file pattern
 
+    Parameters
+    ----------
     obj : dict
         click context obj dict with 'cmor' settings, exp attributes
     """
@@ -219,6 +242,9 @@ def find_all_files(obj):
 
 def add_var_path(obj, path_vars, pat, files, found, duplicate):
     """
+
+    Parameters
+    ----------
     obj : dict
         click context obj dict with 'cmor' settings, exp attributes
     """
@@ -240,6 +266,9 @@ def add_var_path(obj, path_vars, pat, files, found, duplicate):
 def check_vars_in_file(obj, invars, fname):
     """Check that all variables needed for calculation are in file
     else return extra filenames
+
+    Parameters
+    ----------
     obj : dict
         click context obj dict with 'cmor' settings, exp attributes
     """
@@ -480,11 +509,13 @@ def load_data(obj, path_vars):
             var_log.debug(f"load_data: getting attrs for {first}")
             in_units, in_missing, positive, coords = get_attrs(obj,
                 dsin, first)
+        var_log.debug(f"load_data: decoding time axis")
         dsin = xr.decode_cf(dsin, use_cftime=True)
         if (tdim is not None and 'fx' not in obj['frequency'] and
              obj['resample'] == '') :
-            var_log.debug(f"load_data: slicing time {tdim}, {obj['tstart']}, {obj['tend']}")
-            dsin = dsin.sel({tdim: slice(obj['tstart'], obj['tend'])})
+            tstart, tend = obj['tstart'], obj['tend']
+            var_log.debug(f"load_data: slicing time {tdim}, {tstart}, {tend}")
+            dsin = dsin.sel({tdim: slice(tstart, tend)})
             var_log.debug(f"load_data: slicing time {dsin[tdim].values}")
         for field in v['vars']:
             var_log.debug(f"load_data, var & path: {field}, {v['vars']}")
@@ -525,7 +556,9 @@ def generic_name(obj, aname, orig, cnames):
         elif "level_number" in aname:
             cmor_name = "hybrid_height"
     elif orig == "alevhalf":
-        if any(x in aname for x in ["rho_level_number", "rho_level_height"]):
+        if any(x in aname for x in ["theta_level_height", "rho_level_height"]):
+            cmor_name = "hybrid_height_half2"
+        elif "level_number" in aname:
             cmor_name = "hybrid_height_half"
     if cmor_name == orig:
         var_log.error(f"""cmor name for axis {aname} and
@@ -1073,12 +1106,13 @@ def extract_var(obj, input_ds, in_missing):
     if ((tdim is not None and 'fx' not in obj['frequency']) and
         not(orig_tshot == 'point')):
         var_log.debug(f"{obj['tstart']}, {obj['tend']}")
-        # add some tolerance to slice to avoid missing steps at higher frequencies
-        tol = relativedelta(minutes=2)
-        ts = datetime.strptime(obj['tstart'], '%Y%m%dT%H%M') - tol
-        te = datetime.strptime(obj['tend'], '%Y%m%dT%H%M') + tol
-        tstart = ts.strftime('%4Y%m%dT%H%M')
-        tend = te.strftime('%4Y%m%dT%H%M') 
+        # add tolerance to avoid cutting off valid data
+        # this covers potential issues with subhr data and sligthly off time axis for monthly
+        if obj['frequency'] == 'mon':
+            interval='days=1'
+        else:
+            interval='minutes=2'
+        tstart, tend = add_tolerance(obj, interval)
         var_log.debug(f"Before slicing: {array[tdim][0].values}, {array[tdim][-1].values}")
         var_log.debug(f"tstart and tend: {tstart}, {tend}")
         array = array.sel({tdim: slice(tstart,tend)})

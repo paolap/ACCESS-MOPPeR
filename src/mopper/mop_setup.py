@@ -19,7 +19,7 @@
 # originally written for CMIP5 by Peter Uhe and dapted for CMIP6 by Chloe Mackallah
 # ( https://doi.org/10.5281/zenodo.7703469 )
 #
-# last updated 04/12/2025
+# last updated 10/12/2025
 
 import os
 import shutil
@@ -217,7 +217,8 @@ def setup_env(ctx):
         path =  Path(cdict['conda_env'])
         if not path.is_absolute():
             path = appdir / path
-        cdict['conda_env'] = f"source {str(path)}"
+        #cdict['conda_env'] = f"source {str(path)}"
+        cdict['conda_env'] = f"source ~/.bashrc \nconda activate {str(path)}"
     mop_log.debug(f"Setting env, conda_env: {cdict['conda_env']}")
     # Output subdirectories
     outpath = cdict['outpath']
@@ -240,11 +241,14 @@ def setup_env(ctx):
     mop_log.debug(f"""Setup_env dates ref, start and end: 
         {cdict['reference_date']},
         {cdict['start_date']}, {cdict['end_date']}""")
-    # if parent False set parent attrs to 'no parent'
+    # if parent False set parent_experiment_id to 'no parent' and
+    # ignore all other attrs starting with parent_ or branch_
     if cdict['attrs']['parent'] is False and cdict['mode'] == 'cmip6':
-        p_attrs = [k for k in cdict['attrs'].keys() if 'parent' in k]
+        p_attrs = [k for k in cdict['attrs'].keys() if any(
+            k.startswith(x) for x in ['parent_', 'branch_'])]
         for k in p_attrs:
-            cdict['attrs'][k] = 'no parent'
+            cdict['attrs'].pop(k)
+        cdict['attrs']['parent_experiment_id'] = 'no parent'
     ctx.obj = cdict
     return ctx
 

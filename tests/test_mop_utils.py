@@ -23,11 +23,12 @@ import logging
 from pathlib import Path
 
 from mopper.mop_utils import (check_timestamp, get_cmorname,
-    define_attrs, check_time_bnds)
+    define_attrs, check_time_bnds, add_tolerance)
 
 
 ctx = click.Context(click.Command('cmd'),
-    obj={'sel_start': '198302170600', 'sel_end': '198302181300',
+    obj={'tstart': '19830217T0100', 'tend': '19830218T2300',
+         'sel_start': '198302170600', 'sel_end': '198302181300',
          'realm': 'atmos', 'frequency': '1hr', 'var_log': 'varlog_1'})
 # to test 6 hourly files
 ctx2 = click.Context(click.Command('cmd'),
@@ -138,6 +139,7 @@ def test_get_cmorname(caplog):
         zname = get_cmorname(ctx.obj, 'theta_model_level_number')
     assert zname == 'hybrid_height'
 
+
 def test_define_attrs(caplog):
     global ctx
     caplog.set_level(logging.DEBUG, logger='varlog_1')
@@ -156,6 +158,7 @@ def test_define_attrs(caplog):
         out = define_attrs(ctx.obj)
     assert out['notes'] == "Linearly interpolated from model levels using numpy.interp() function. NaNs are assigned to pressure levels falling out of the height range covered by the model"
 
+
 def test_check_time_bnds(caplog):
     global ctx3
     caplog.set_level(logging.DEBUG, logger='mop_log')
@@ -163,3 +166,12 @@ def test_check_time_bnds(caplog):
     with ctx3:
         res = check_time_bnds(ctx3.obj, bnds, 'day')
     assert res is True
+
+
+def test_add_tolerance(caplog):
+    global ctx
+    caplog.set_level(logging.DEBUG, logger='mop_log')
+    with ctx:
+        ts, te = add_tolerance(ctx.obj, 'days=1')
+    assert ts == '19830216T0100'
+    assert te == '19830219T2300'

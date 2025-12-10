@@ -19,7 +19,7 @@
 # originally written for CMIP5 by Peter Uhe and dapted for CMIP6 by Chloe Mackallah
 # ( https://doi.org/10.5281/zenodo.7703469 )
 #
-# last updated 04/12/2025
+# last updated 10/12/2025
 #
 # This file contains a collection of utilities to help calculate derived variables
 # from ACCESS model output.
@@ -113,9 +113,9 @@ def time_resample(obj, var, rfrq, tdim, orig_tshot, sample='down', stats='mean')
     if sample == "down":
         try:
             #vout = var.resample({tdim: rfrq}, origin="start_day",
-            #                    closed="right")
             # testing new settings
-            vout = var.resample({tdim: rfrq}, origin="start")
+            vout = var.resample({tdim: rfrq}, origin="start", label='right',
+                                closed="right")
             method = getattr(vout, stats)
             vout = method()
             # apply negative offset if original timeshot is not point

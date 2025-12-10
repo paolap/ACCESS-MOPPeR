@@ -192,8 +192,8 @@ attrs:
     nominal_resolution: "250 km"
     #
     # Parent experiment details if any
-    # if parent=false, all parent fields are automatically set to "no parent".
-    # If true, defined values are used.
+    # parent bool only use din cmip6 mode
+    #
     parent: !!bool false 
     # CMOR will add a tracking_id if you want to define a prefix add here
     tracking_prefix: 

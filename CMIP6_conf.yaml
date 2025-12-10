@@ -188,7 +188,8 @@ attrs:
     nominal_resolution: "250 km"
     version: "v20220426"
     # Parent experiment details:
-    # if parent=false, all parent fields are automatically set to "no parent". 
+    # if parent=false, parent_experiment_id s set to "no parent"
+    # and other "parent_***" attributes are ignored
     # If true, defined values are used.
     #
     parent: !!bool false 
