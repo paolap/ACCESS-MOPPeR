@@ -214,8 +214,5 @@ attrs:
     # DO NOT REMOVE OR ALTER this if you don't know what you're doing :-)
     #CMOR will add a tracking_id if you want to define a prefix add here
     tracking_prefix: "hdl:21.14100"
-    Conventions: "CF-1.7 CMIP-6.2" 
-    comment: "post-processed using ACCESS-MOPPeR v1.2.0 https://doi.org/10.5281/zenodo.14322348"
-    # further_info_url is added automatically by CMOR
-    # currently is not possible to disable this behaviour, so it needs to be removed manually
-    # if not needed as for CMIP6Plus
+    Conventions: "CF-1.7 CMIP-6.5" 
+    comment: "post-processed using ACCESS-MOPPeR v1.2.0 https://doi.org/10.5281/zenodo.17886415"

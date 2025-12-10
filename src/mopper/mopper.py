@@ -294,7 +294,7 @@ def mop_process(obj):
     # get axis of each dimension
     axes = get_axis_dim(obj, ovar)
     var_log.info(f"Setting cmor table: {tables[1]}")
-    cmor.set_table(tables[0])
+    cmor.set_table(tables[1])
     axis_ids = []
     z_ids = []
     time_dim = None
@@ -311,6 +311,10 @@ def mop_process(obj):
             t_bounds = get_bounds(obj, dsin[var1], axes['t_ax'], cmor_tName,
                 ax_val=t_ax_val)
         try:
+            var_log.debug(f"""units: {obj['reference_date']},
+            cmorname: {cmor_tName}, lenght: {len(t_ax_val)} 
+            coord_vals: {t_ax_val}
+            cell_bounds: {t_bounds}""")
             t_ax_id = cmor.axis(table_entry=cmor_tName,
                 units=obj['reference_date'],
                 length=len(t_ax_val),
@@ -329,7 +333,6 @@ def mop_process(obj):
         if cmor_zName in bounds_list:
             z_bounds = get_bounds(obj, dsin[var1], axes['z_ax'], cmor_zName)
         try:
-            print(axes['z_ax'].units)
             z_ax_id = cmor.axis(table_entry=cmor_zName,
                 units=axes['z_ax'].units,
                 length=zlen,

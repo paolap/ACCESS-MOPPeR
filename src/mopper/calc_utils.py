@@ -119,10 +119,12 @@ def time_resample(obj, var, rfrq, tdim, orig_tshot, sample='down', stats='mean')
             method = getattr(vout, stats)
             vout = method()
             # apply negative offset if original timeshot is not point
-            if orig_tshot != 'point':
-                half, tunit = offset[rfrq][:]
-                vout = vout.assign_coords({tdim:
-                    xr.CFTimeIndex(vout[tdim].values).shift(-half, tunit)})
+            #if orig_tshot != 'point':
+            # removing this has results aren't anymore points in time
+            # so I can probably remove orig_tshot form inputs
+            half, tunit = offset[rfrq][:]
+            vout = vout.assign_coords({tdim:
+                xr.CFTimeIndex(vout[tdim].values).shift(-half, tunit)})
         except Exception as e:
             var_log.error(f"Resample error: {e}")
             raise MopException(f"{e}")
@@ -278,6 +280,7 @@ def K_degC(obj, var, inverse=False):
         var_log.info("temp in degC, converting to K")
         vout = var + 273.15
     return vout
+
 
 def get_coords(obj, coords):
     """Get lat/lon and their boundaries from ancil file

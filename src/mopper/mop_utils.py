@@ -912,6 +912,7 @@ def get_bounds(obj, ds, axis, cmor_name, ax_val=None):
     if 'time' in cmor_name and calc is False:
         # in most cases if time_bounds decoded we need to re-convert them
         if 'cftime' in str(type(dim_bnds_val[0,1])):
+            var_log.debug(f"Time bnds coded re-convert to number")
             dim_bnds_val = cftime.date2num(dim_bnds_val,
                 units=obj['reference_date'],
                 calendar=obj['attrs']['calendar'])
@@ -986,6 +987,7 @@ def get_bounds_values(obj, ds, bname):
         bnds_val = ds[bname].values
     elif ancil_file != "":     
         fname = f"{obj['ancils_path']}/{ancil_file}"
+        var_log.debug(f"iGetting bounds from ancil_file {fname}")
         ancil = xr.open_dataset(fname)
         if bname in ancil.variables:
             bnds_val = ancil[bname].values
