@@ -16,7 +16,7 @@ source:
 build:
     number: 1
     noarch: python
-    script: "{{ PYTHON }} -m pip install ../. --no-deps --ignore-installed"
+    script: "{{ PYTHON }} -m pip install ../pyproject.toml --no-deps --ignore-installed"
     entry_points:
         - mop = mopper.mopper:mop_catch
         - mopdb = mopdb.mopdb:mopdb
