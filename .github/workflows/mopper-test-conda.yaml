@@ -31,13 +31,13 @@ jobs:
           activate-environment: mopper_env 
           channels: conda-forge, coecms
           channel-priority: true
-          environment-file: conda/environment.yaml    # Path to the build conda environment
+          environment-file: conda-test/environment.yaml    # Path to the build conda environment
           auto-update-conda: false
           show-channel-urls: true #
       - name: Build but do not upload the conda packages
         uses: uibcdf/action-build-and-upload-conda-packages@v1.4.0
         with:
-          meta_yaml_dir: conda
+          meta_yaml_dir: conda-test
           python-version: ${{ matrix.python-version }} # Values previously defined in `matrix`
           user: coecms
           label: auto
