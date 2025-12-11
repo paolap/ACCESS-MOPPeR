@@ -29,12 +29,8 @@
 #
 # and open a new issue on github.
 
-import click
 import xarray as xr
-import os
-import json 
 import numpy as np
-import dask
 import logging
 from importlib.resources import files as import_files
 

@@ -19,26 +19,23 @@
 # originally written for CMIP5 by Peter Uhe and dapted for CMIP6 by Chloe Mackallah
 # ( https://doi.org/10.5281/zenodo.7703469 )
 #
-# last updated 10/12/2025
+# last updated 11/12/2025
 #
 # This file contains a collection of utilities to help calculate derived variables
 # from ACCESS model output.
 # Initial functions' definitions were based on APP4 modified to work with Xarray.
 
 
-import click
 import xarray as xr
-import os
 import json 
 import yaml
 import numpy as np
-import dask
 import logging
 
 from importlib.resources import files as import_files
 from pathlib import Path
 
-from mopdb.utils import read_yaml, MopException
+from mopdb.utils import MopException
 
 # Global Variables
 #----------------------------------------------------------------------

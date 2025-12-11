@@ -19,7 +19,7 @@
 # originally written for CMIP5 by Peter Uhe and dapted for CMIP6 by Chloe Mackallah
 # ( https://doi.org/10.5281/zenodo.7703469 )
 #
-# last updated 04/12/2025
+# last updated 11/12/2025
 #
 # This file contains a collection of functions to calculate ocean derived variables
 # from ACCESS model output.
@@ -30,12 +30,9 @@
 # and open a new issue on github.
 
 
-import click
 import xarray as xr
 import os
-import json 
 import numpy as np
-import dask
 import logging
 import gsw
 
@@ -307,7 +304,6 @@ def calc_zostoga(obj, ptemp, dht):
     return zostoga
 
 
-@click.pass_context
 def get_areacello(obj, area_t=None):
     """Returns areacello
 
