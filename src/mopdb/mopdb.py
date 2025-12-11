@@ -20,7 +20,6 @@
 
 import click
 import logging
-import sys
 import json
 
 from importlib.resources import files as import_files

@@ -20,7 +20,6 @@
 #
 
 import logging
-import sys
 import csv
 import json
 
@@ -449,9 +448,9 @@ def identify_patterns(files):
             # should be possible to eventually removing this
             labels = ['jan', 'feb', 'mar', 'apr', 'may', 'jun',
                       'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
-            for l in labels:
-                first = first.replace(l,'')
-                fnext = fnext.replace(l,'')
+            for lab in labels:
+                first = first.replace(lab,'')
+                fnext = fnext.replace(lab,'')
             i = len(first)
             while i >= 1:
                 i-=1
