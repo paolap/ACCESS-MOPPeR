@@ -1,4 +1,13 @@
 {
+	 "Header": {
+        "data_specs_version": "01.00.33",
+        "table_id": "Table formula terms",
+        "cmor_version": "3.13",
+        "table_date": "08 December 2025",
+        "missing_value": "1e20",
+        "product": "output",
+        "Conventions": "CF-1.7 CMIP-6.2"
+    },
     "axis_entry": {
         "alt16": {
             "standard_name": "altitude", 

@@ -27,7 +27,7 @@ from importlib.resources import files as import_files
 from pathlib import Path
 
 from mopdb.mopdb_utils import (mapping_sql, cmorvar_sql, read_map,
-    read_map_app4, write_cmor_table, update_db) 
+    read_map_app4, write_cmor_table, update_db, process_table_row) 
 from mopdb.utils import (config_log, db_connect, query, create_table,
     delete_record, MopException)
 from mopdb.mopdb_map import (write_varlist, write_map_template,
@@ -106,7 +106,6 @@ def check_cmor(ctx, dbname):
     """Prints list of cmor_var defined in mapping table but not in
     cmorvar table.
 
-
     Parameters
     ----------
     ctx : obj
@@ -151,7 +150,8 @@ def check_cmor(ctx, dbname):
 def cmor_table(ctx, dbname, fname, alias, label):
     """Create CMIP style table containing new variable definitions
     fname  from output to extract cmor_var, frequency, realm 
-    If these var/freq/realm/dims combs don't exist in cmorvar add var to table.
+    If these var/freq/realm/dims combs don't exist in database cmorvar
+    table, they get added.
     `alias` here act as the new table name.
 
     Parameters
@@ -176,14 +176,13 @@ def cmor_table(ctx, dbname, fname, alias, label):
     sql = "SELECT out_name, frequency, modeling_realm FROM cmorvar"
     results = query(conn, sql, first=False, logname='mopdb_log')
     # cmor_vars is the actual cmip variable name 
-    # this sometime differs from name used in tables tohat can distinguish different dims/freq
+    # this sometime differs from name used in tables that can distinguish different dims/freq
     cmor_vars = set(x[0] for x in results)
     # read variable list from map_ file
     vlist = read_map(fname, alias)
     # extract cmor_var,units,dimensions,frequency,realm,cell_methods
     var_list = []
     for v in vlist[1:]:
-        #vid = (v[0], v[5], v[6])
         # This was adding variables to the table just if they didn't exists in other tables
         if v[0][:4] != 'fld_':
             if v[0] not in cmor_vars:
@@ -201,14 +200,15 @@ def cmor_table(ctx, dbname, fname, alias, label):
                 definition = list(record)
                 #definition[0] = f"{v[0]}-{alias}"
                 definition[0] = v[0].replace('_', '-')
-                definition[1] = v[5]
-                definition[2] = v[6]
+                definition[1] = v[6]
+                definition[2] = v[7]
+                definition[9] = record[9].split()
                 # if units are different print warning!
                 if v[3] != record[4]:
                     mopdb_log.warning(f"Variable {v[0]} units orig/table are different: {v[3]}/{record[4]}")
-                if v[7] != '' and v[7] != record[5]:
-                    mopdb_log.warning(f"Variable {v[0]} cell_methods orig/table are different: {v[7]}/{record[5]}")
-                if len(v[4].split()) != len(record[9].split()):
+                if v[8] != '' and v[8] != record[5]:
+                    mopdb_log.warning(f"Variable {v[0]} cell_methods orig/table are different: {v[8]}/{record[5]}")
+                if len(v[4].split()) != len(definition[9]):
                     mopdb_log.warning(f"Variable {v[0]} number of dims orig/table are different: {v[4]}/{record[9]}")
                 var_list.append(definition)
     write_cmor_table(var_list, alias)
@@ -267,13 +267,8 @@ def update_cmor(ctx, dbname, fname, alias):
     row_dict = vardict['variable_entry']
     vars_list = []
     for name,row in row_dict.items():
-    # alter the name so it reflects also its origin
-        name = f"{name}-{alias}" 
-        values = [x for x in row.values()]
-        # check if flag attrs present if not add them
-        if 'flag_values' not in row.keys():
-            values = values[:-2] + ['',''] + values[-2:]
-        vars_list.append(tuple([name] + values))
+        values = process_table_row(name, row, alias)
+        vars_list.append(tuple(values))
     mopdb_log.debug(f"Variables list: {vars_list}")
     # check that all tuples have len == 19
     for r in vars_list:

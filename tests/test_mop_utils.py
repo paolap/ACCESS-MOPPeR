@@ -23,11 +23,12 @@ import logging
 from pathlib import Path
 
 from mopper.mop_utils import (check_timestamp, get_cmorname,
-    define_attrs, check_time_bnds)
+    define_attrs, check_time_bnds, add_tolerance)
 
 
 ctx = click.Context(click.Command('cmd'),
-    obj={'sel_start': '198302170600', 'sel_end': '198302181300',
+    obj={'tstart': '19830217T0100', 'tend': '19830218T2300',
+         'sel_start': '198302170600', 'sel_end': '198302181300',
          'realm': 'atmos', 'frequency': '1hr', 'var_log': 'varlog_1'})
 # to test 6 hourly files
 ctx2 = click.Context(click.Command('cmd'),
@@ -47,27 +48,27 @@ def test_check_timestamp(caplog):
              for d in ['17','18','19'] for h in range(24)] 
     inrange = files[6:37]
     with ctx:
-        out1 = check_timestamp(files)
+        out1 = check_timestamp(ctx.obj, files)
     assert out1 == inrange
     # get only first file is frequency is fx
     ctx.obj['frequency'] = 'fx'
     inrange = [files[0]]
     with ctx:
-        out2 = check_timestamp(files)
+        out2 = check_timestamp(ctx.obj, files)
     assert out2 == inrange
     # test atmos 6hr files
     files = [Path(f'obj_198302{d}T{str(h).zfill(2)}01_6hr.nc')
              for d in ['17','18','19'] for h in range(0,24,6)] 
     inrange = files[:8]
     with ctx2:
-        out3 = check_timestamp(files)
+        out3 = check_timestamp(ctx2.obj, files)
     assert out3 == inrange
     # test atmos archiver style 6hr files
     files = [Path(f'da130a.p71983{m}_6h.nc')
              for m in ['01','02','03']] 
     inrange = files[1:2]
     with ctx2:
-        out4 = check_timestamp(files)
+        out4 = check_timestamp(ctx2.obj, files)
     assert out4 == inrange
     # test atmos 1hr AUS2200 style files
     ctx2.obj['frequency'] = '1hr'
@@ -77,7 +78,7 @@ def test_check_timestamp(caplog):
              for h in range(0,24)]
     inrange = files[6:12]
     with ctx2:
-        out5 = check_timestamp(files)
+        out5 = check_timestamp(ctx2.obj, files)
     assert out5 == inrange
     # function is now independent from realm no need to fix it in ctx
     # test ocean files
@@ -85,7 +86,7 @@ def test_check_timestamp(caplog):
     files = [Path(f'ocn_daily.nc-198302{str(d).zfill(2)}') for d in range(1,29)] 
     inrange = files[16:18]
     with ctx:
-        out6 = check_timestamp(files)
+        out6 = check_timestamp(ctx.obj, files)
     assert out6 == inrange
     # test ice files
     # this pass but because month and year are separated by "-" 
@@ -95,12 +96,12 @@ def test_check_timestamp(caplog):
     files = [Path(f'iceh_d.1983-{str(m).zfill(2)}.nc') for m in range(1,12)] 
     inrange = files
     with ctx2:
-        out7 = check_timestamp(files)
+        out7 = check_timestamp(ctx2.obj, files)
     assert out7 == inrange
     # test with 3 digit number in filename which is not a date
     files = [Path(f'/sc/AM3/di787/di787a.pd198303.nc')] 
     with ctx2:
-        out8 = check_timestamp(files)
+        out8 = check_timestamp(ctx2.obj, files)
     assert out8 == files
     # test with 3 digit number in filename which is not a date
     # and missing 0 at start of year
@@ -108,7 +109,7 @@ def test_check_timestamp(caplog):
     ctx2.obj['sel_end'] =  '078312311200'
     files = [Path(f'/sc/AM3/di787/di787a.pd78303.nc')] 
     with ctx2:
-        out9 = check_timestamp(files)
+        out9 = check_timestamp(ctx2.obj, files)
     assert out9 == files
 
 
@@ -125,18 +126,19 @@ def test_get_cmorname(caplog):
     #foo = xr.DataArray(data, coords=[levs, tdata, lats, lons],
     #      dims=["lev", "t", "lat", "lon"])
     with ctx:
-        tname = get_cmorname('time')
-        iname = get_cmorname('lon')
-        jname = get_cmorname('lat')
-        zname = get_cmorname('lev')
+        tname = get_cmorname(ctx.obj, 'time')
+        iname = get_cmorname(ctx.obj, 'lon')
+        jname = get_cmorname(ctx.obj, 'lat')
+        zname = get_cmorname(ctx.obj, 'lev')
     assert tname == 'time'
     assert iname == 'longitude'
     assert jname == 'latitude'
     assert zname == 'plev3'
     ctx.obj['axes'] = 'longitude latitude alevel time'
     with ctx:
-        zname = get_cmorname('theta_model_level_number')
+        zname = get_cmorname(ctx.obj, 'theta_model_level_number')
     assert zname == 'hybrid_height'
+
 
 def test_define_attrs(caplog):
     global ctx
@@ -145,21 +147,31 @@ def test_define_attrs(caplog):
     ctx.obj['variable_id'] = "ta"
     ctx.obj['calculation'] = "... plevinterp(var[0]) "
     with ctx:
-        out = define_attrs()
+        out = define_attrs(ctx.obj)
     assert out['notes'] == "some existing note Linearly interpolated from model levels using numpy.interp() function. NaNs are assigned to pressure levels falling out of the height range covered by the model"
     # repeating to make sure we are not using reference to ctx see issue #190
     with ctx:
-        out = define_attrs()
+        out = define_attrs(ctx.obj)
     assert out['notes'] == "some existing note Linearly interpolated from model levels using numpy.interp() function. NaNs are assigned to pressure levels falling out of the height range covered by the model"
     ctx.obj['attrs'] = {}
     with ctx:
-        out = define_attrs()
+        out = define_attrs(ctx.obj)
     assert out['notes'] == "Linearly interpolated from model levels using numpy.interp() function. NaNs are assigned to pressure levels falling out of the height range covered by the model"
+
 
 def test_check_time_bnds(caplog):
     global ctx3
     caplog.set_level(logging.DEBUG, logger='mop_log')
     bnds = np.array([[18262., 18263.], [18263.,18264.],[18264.,18265.]])
     with ctx3:
-        res = check_time_bnds(bnds, 'day')
+        res = check_time_bnds(ctx3.obj, bnds, 'day')
     assert res is True
+
+
+def test_add_tolerance(caplog):
+    global ctx
+    caplog.set_level(logging.DEBUG, logger='mop_log')
+    with ctx:
+        ts, te = add_tolerance(ctx.obj, 'days=1')
+    assert ts == '19830216T0100'
+    assert te == '19830219T2300'

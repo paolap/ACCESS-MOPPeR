@@ -37,7 +37,7 @@ ctx3 = click.Context(click.Command('cmd'),
     obj={'start_date': '20230101T0000', 'end_date': '20250101T0000',
          'frequency': 'mon', 'outpath': '/g/da/exp',
          'path_template': '{version}/{frequency}', 'file_template': 
-         '{variable_id}_{frequency}'})
+         '{variable_id}_{frequency}', 'mode': 'custom'})
 
 def test_compute_fsize(caplog):
     caplog.set_level(logging.DEBUG, logger='mop_log')
