@@ -1,0 +1,21 @@
+name: testenv
+channels:
+  - conda-forge
+  - nodefaults
+
+dependencies:
+  - click
+  - xarray>=2024.05.0
+  - cmor
+  - numpy
+  - dask
+  - pyyaml
+  - cftime
+  - python-dateutil
+  - metpy
+  - gsw
+  - pytest 
+  - coverage 
+  - codecov
+  - pyfakefs
+  - ruff

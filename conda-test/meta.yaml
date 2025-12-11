@@ -49,7 +49,7 @@ test:
     - codecov
 
 about:
-    home: https://github.com/ACCESS-Hive/ACCESS-MOPPeR
+    home: https://github.com/paolap/ACCESS-MOPPeR
     license: Apache 2.0
     #license_file: LICENSE.txt
     summary: 'ACCESS-MOPPeR post-process ACCESS raw model output using CMOR and pre-defined data standards' 
