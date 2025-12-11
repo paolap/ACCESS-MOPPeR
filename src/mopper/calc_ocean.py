@@ -36,9 +36,8 @@ import numpy as np
 import logging
 import gsw
 
-from importlib.resources import files as import_files
 
-from mopdb.utils import read_yaml, MopException
+from mopdb.utils import MopException
 from mopper.calc_utils import get_coords
 
 # Global Variables
@@ -154,12 +153,11 @@ def calc_global_ave_ocean(obj, var, rho_dzt, area_t):
     mass = rho_dzt * area_t
     #PP would be better to get the correct dimension from variable and use them
     # rather than try and except
-    
     try:
         vnew = var.weighted(mass).mean(dim=('st_ocean', 'yt_ocean', 'xt_ocean'), skipna=True)
     except Exception as e:
         vnew = var.weighted(mass[:, 0, :, :]).mean(dim=('x', 'y'), skipna=True)
-    
+        var_log.debug(f"Calc_global_ave_ocean: Dimensions are x,y: {e}")
     return vnew
 
 
@@ -193,7 +191,7 @@ def calc_global_ave_ocean(obj, var, rho_dzt):
         vnew = np.average(var, axis=(1,2,3), weights=mass)
     except Exception as e:
         vnew = np.average(var, axis=(1,2), weights=mass[:,0,:,:])
-
+        var_log.debug(f"Calc_global_ave_ocean: 2 not 3 axes: {e}")
     return vnew
 
 
