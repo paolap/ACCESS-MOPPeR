@@ -35,7 +35,7 @@ jobs:
         with:
           meta_yaml_dir: conda
           python-version: ${{ matrix.python-version }} 
-          user: coecms
+          user: ${{ secrets.ANACONDAUSER }}
           label: auto
           upload: true
-          token: ${{ secrets.ANACONDA_TOKEN }} # Replace with the right name of your secret
+          token: ${{ secrets.ANACONDATOKEN }} # Replace with the right name of your secret
