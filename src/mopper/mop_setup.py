@@ -356,6 +356,9 @@ def create_var_map(ctx, table, mappings, varsel, activity_id=None,
     """
     mop_log = logging.getLogger('mop_log')
     matches = []
+    cmip7 = False
+    if table.startswith('CMIP7_'):
+        cmip7 = True
     fpath = ctx.obj['tables_path'] / f"{table}.json"
     if not fpath.exists():
          fpath = import_files('mopdata.cmor_tables').joinpath( 
@@ -372,26 +375,32 @@ def create_var_map(ctx, table, mappings, varsel, activity_id=None,
     all_vars = [v for v in row_dict.keys()]
     # work out which variables you want to process
     select = all_vars 
+    # if cmip7 tables are used than we ignore "_frequency" from varname
+    # to check if they're in table
     if selection is not None:
-        select = [v for v in all_vars if v in selection]
+        if cmip7:
+            for v in selection:
+                select[v for v in selection if v.split('_')[0] in all_vars]
+        else:
+            select = [v for v in all_vars if v in selection]
     elif ctx.obj['variable_to_process'] != 'all':
         select = [ctx.obj['variable_to_process']]
-    elif ctx.obj['force_dreq'] is True:
-        dreq_years = read_dreq_vars(table_id, activity_id)
-        all_dreq = [v for v in dreq_years.keys()]
-        select = set(select).intersection(all_dreq) 
     mop_log.debug(f"Selecting variables: {select}")
-    for var,row in row_dict.items():
-        if var not in select:
-            continue
-        frq = row['frequency']
+    # inverting and looping across selection instead of vars in table
+    #for var,row in row_dict.items():
+    for var in selection:
+        frq = ""
+        if cmip7:
+            var, frq = var.split("_")
+        #if var not in select:
+        #    continue
+        row = row_dict[var]
+        if frq == "":
+            frq = row['frequency']
         realm = row['modeling_realm']
         # new tables can have realm as a list
         if isinstance(realm, list):
             realm = " ".join(realm)
-        years = 'all'
-        if ctx.obj['force_dreq'] and var in all_dreq:
-            years = dreq_years[var]
         if 'subhr' in frq:
             frq =  ctx.obj['subhr'] + frq.split('subhr')[1]
         match = find_matches(table, var, realm, frq, mappings)

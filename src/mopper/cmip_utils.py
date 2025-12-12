@@ -200,3 +200,64 @@ def edit_json_cv(json_cv, attrs):
         json.dump(json_cv_dict, f, indent=4, separators=(',', ': '))
     f.close
     return
+
+
+def get_cell_measures(dsinfo, variable, realm):
+    """
+    """
+    region = DATASET_INFO['region']
+    frequency = DATASET_INFO['frequency']
+    cell_measures_key = ".".join([realm] + variable.split("_") + [frequency, region])
+
+    with open('tables/CMIP7_cell_measures.json') as fh:
+        cell_measures = json.load(fh)
+
+    # Check that cell_measures are valid ( option flags need to be manually replaced )
+    variable_cell_measures = cell_measures[cell_measures_key]
+    if variable_cell_measures in ["::OPT", "::MODEL"]:
+        raise RuntimeError(f"found cell_measures '{variable_cell_measures}' which CMOR will not allow")
+    return variable_cell_measures
+
+
+def edit_json_cv_cmip7(json_cv, attrs):
+    """Edit the CMIP6 CV json file to include extra activity_ids and
+    experiment_ids, so they can be recognised by CMOR when following 
+    CMIP6 standards.
+
+    Parameters
+    ----------
+    json_cv : str
+        Path of CV json file to edit
+    attrs: dict
+        Dictionary with attributes defined for experiment
+
+    Returns
+    -------
+    """
+    activity_id = attrs['activity_id']
+    experiment_id = attrs['experiment_id']
+
+    with open(json_cv, 'r') as f:
+        json_cv_dict = json.load(f, object_pairs_hook=OrderedDict)
+    f.close()
+
+    if activity_id not in json_cv_dict['CV']['activity_id']:
+        print(f"activity_id '{activity_id}' not in CV, adding")
+        json_cv_dict['CV']['activity_id'][activity_id] = activity_id
+
+    if experiment_id not in json_cv_dict['CV']['experiment_id']:
+        print(f"experiment_id '{attrs['experiment_id']}' not in CV, adding")
+        json_cv_dict['CV']['experiment_id'][experiment_id] = OrderedDict({
+        'activity_id': [activity_id],
+        'additional_allowed_model_components': ['AER','CHEM','BGC'],
+        'experiment': experiment_id,
+        'experiment_id': experiment_id,
+        'parent_activity_id': [attrs['parent_activity_id']],
+        'parent_experiment_id': [attrs['parent_experiment_id']],
+        'required_model_components': [attrs['source_type']],
+        'sub_experiment_id': ['none']
+        })
+    with open(json_cv,'w') as f:
+        json.dump(json_cv_dict, f, indent=4, separators=(',', ': '))
+    f.close
+    return

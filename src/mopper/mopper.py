@@ -45,7 +45,7 @@ from mopper.mop_setup import setup_env, variable_mapping, manage_env
 from mopper.setup_utils import (create_exp_json, write_config,
     populate_db, count_rows, sum_file_sizes, filelist_sql, write_job)
 from mopdb.utils import db_connect, create_table, query, MopException
-from mopper.cmip_utils import edit_json_cv
+from mopper.cmip_utils import edit_json_cv, get_cell_measures
 from mopper.calc_utils import get_coords
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -442,6 +442,12 @@ def mop_process(obj):
         mop_log.error(f"Unable to define the CMOR variable {obj['filename']}")
         var_log.error(f"Unable to define the CMOR variable {e}")
         return 2
+    if obj['mode'] == "cmip7":
+        var_log.info("Setting variable cell_measures")
+        # var_id is cmorname and this is different for CMIP7 a combination of grid/time etc
+        var_cell_measures = get_cell_measures(dsinfo, var_id, obj['realm'])
+        cmor.set_variable_attribute(variable_id, "cell_measures", "c",
+            var_cell_measures)
     var_log.info("Writing...")
     var_log.info(f"Variable shape is {ovar.shape}")
     status = None

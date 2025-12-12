@@ -211,7 +211,7 @@ def write_yaml(data, fname, logname='__name__'):
     log = logging.getLogger(logname)
     try:
         with open(fname, 'w') as f:
-            yaml.dump(data, f)
+            yaml.dump(data, f, indent=4)
     except Exception as e:
         log.error(f"Check {data} exists and is yaml object")
         raise MopException(e)
