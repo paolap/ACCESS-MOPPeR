@@ -34,7 +34,6 @@ jobs:
       - name: Build and upload the conda packages
         uses: uibcdf/action-build-and-upload-conda-packages@v1.4.0
         with:
-          meta_yaml_dir: conda
           python-version: ${{ matrix.python-version }} 
           user: ${{ secrets.ANACONDAUSER }}
           label: auto

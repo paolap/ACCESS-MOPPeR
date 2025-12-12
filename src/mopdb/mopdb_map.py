@@ -84,6 +84,7 @@ def get_cmorname(conn, vobj, version):
                         f"{results}\n Using {vobj.cmor_var} from {vobj.cmor_table}")
     return vobj
 
+
 def get_file_frq(ds, fnext, int2frq):
     """Return a dictionary with frequency for each time axis.
 
@@ -224,6 +225,7 @@ def write_varlist(conn, indir, version, alias):
     fcsv.close()
     return  fname, vobj_list, fobj_list
 
+
 def match_stdname(conn, vobj, stdn):
     """Returns an updated stdn list if finds one or more variables
     in cmorvar table that match the standard name passed as input.
@@ -241,6 +243,7 @@ def match_stdname(conn, vobj, stdn):
             stdnm=True)
         found_match = True
     return stdn, found_match
+
 
 def match_var(vobj, version, mode, conn, records):
     """Returns match for variable if found after looping
@@ -271,6 +274,7 @@ def match_var(vobj, version, mode, conn, records):
             records = add_var(records, vobj, x)
         found_match = True
     return records, found_match
+
 
 def parse_vars(conn, vobjs, version):
     """Returns records of variables to include in template mapping file,
@@ -326,6 +330,7 @@ def parse_vars(conn, vobjs, version):
 
     return full, no_ver, no_frq, stdn, no_match, stash_vars 
 
+
 def add_var(vlist, vobj, match, stdnm=False):
     """Add information from match to variable list and re-order
     fields so they correspond to final mapping output.
@@ -348,6 +353,7 @@ def add_var(vlist, vobj, match, stdnm=False):
             var.cmor_table = table 
     vlist.append(var)
     return vlist
+
 
 def potential_vars(conn, vobjs, stash_vars, version):
     """Returns list of variables that can be potentially derived from
@@ -538,6 +544,7 @@ def write_catalogue(conn, vobjs, fobjs, alias):
         fcsv.close()
     return jout, csvname
 
+
 def create_file_dict(fobjs, alias):
     """
     """
@@ -570,6 +577,7 @@ def create_file_dict(fobjs, alias):
         lines = add_mapvars(pat_obj.varlist, lines, path_list, alias)
     return lines
 
+
 def add_mapvars(vobjs, lines, path_list, alias):
     """
     """
@@ -593,6 +601,7 @@ def add_mapvars(vobjs, lines, path_list, alias):
                 fd['date'] = date 
                 lines.append(fd)
     return lines
+
 
 def load_vars(fname, indir=None):
     """Returns Variable and FPattern objs from varlist or map file.
