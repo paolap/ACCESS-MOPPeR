@@ -3,6 +3,13 @@
 # Settings to manage cmorisation and set tables/variables to process
 # This config file is to produce files to submit to CMIP6 project
 # It's more restrictive than ACDD_conf.yaml
+# This configuration file example covers both CMIP6 and CMIP6Plus requirements
+# with the following differences
+# In the global attributes:
+# -further-info-url and product are not required for CMIP6Plus
+# CVs are different, so for experiments and source defintions refer to relevant CV
+# CMIP6Plus uses https://github.com/PCMDI/mip-cmor-tables
+# CMIP6 uses https://github.com/PCMDI/cmip6-cmor-tables/tree/main
 cmor:
     # If test true it will just run the setup but not launch the job automatically
     test: false
@@ -28,8 +35,9 @@ cmor:
     #reference_date: "0950-01-01"              
     reference_date: default              
     # official CMIP6
-    path_template: "{activity_id}/{source_id}/{experiment_id}/{variant_label}/{table_id}/{variable_id}/{grid_label}/{version}"
-    file_template: "{variable_id}_{table_id}_{source_id}_{experiment_id}_{variant_label}_{grid_label}"
+    path_template: "{mip_era}/{activity_id}/{institution_id}/{source_id}/{experiment_id}/{member_id}/{table_id}/{variable_id}/{grid_label}/{version}"
+    file_template: "{variable_id}_{table_id}_{source_id}_{experiment_id}_{member_id}_{grid_label}"
+    #NB member_id is <sub_experiment_id>-<variant_label> if it's sub-experiment or just <variant_label> 
     # maximum file size in MB: this is meant as uncompressed, compression might reduce it by 50%
     max_size: 8192
     # deflate_level sets the internal compression level, 
@@ -45,6 +53,8 @@ cmor:
     # Or create a yaml file listing variables to process (VAR_SUBSET[_LIST]).
     # each line: <table: [var1, var2, var3 ..]>
     tables: CMIP6_Amon 
+    # use MIP-CMOR tables for CMIP6Plus
+    #tables: MIP_APmon 
     variable_to_process: tas
     var_subset: !!bool False
     var_subset_list: ''
@@ -54,7 +64,10 @@ cmor:
     levnum: 85
     # Mappings, vocab and tables settings
     # default=data/dreq/cmvme_all_piControl_3_3.csv
+    # dreq not available for CMIP6Plus
     dreq: default
+    # Set to true to use dreq
+    # It should be False for CMIP6Plus
     force_dreq: !!bool True
     dreq_years: !!bool False
     # mapping file created with cli_db.py based on the actual model output
@@ -84,10 +97,16 @@ cmor:
     # DO NOT REMOVE OR ALTER this if you don't know what you're doing :-)
     # defines Controlled Vocabularies and required attributes
     _control_vocabulary_file: "CMIP6_CV.json"
+    # for CMIP6Plus use
+    #_control_vocabulary_file: "CMIP6Plus_CV.json"
     _cmip6_option: CMIP6
     _AXIS_ENTRY_FILE: CMIP6_coordinate.json
     _FORMULA_VAR_FILE: CMIP6_formula_terms.json 
     grids: CMIP6_grids.json
+    # for CMIP6Plus use instead
+    #_AXIS_ENTRY_FILE: MIP_coordinate.json
+    #_FORMULA_VAR_FILE: MIP_formula_terms.json 
+    #grids: MIP_grids.json
   # Additional NCI information:
     # NCI project to charge compute; $PROJECT = your default project
     project: <proj-id> 
@@ -97,7 +116,7 @@ cmor:
     # hugemem is recommended for high resolution data and/or derived variables
     # hugemem requires a minimum of 6 cpus this is handled by the code
     queue: hugemem
-    mem_per_cpu: 30
+    mem_per_cpu: 32
     max_cpus: 24
     # Mopper uses multiprocessing to produce files in parallel, usually 1 cpu per worker
     # is a good compromise, occasionally you might want to pass a higher number
@@ -106,12 +125,15 @@ cmor:
     # walltime in "hh:mm:ss"
     walltime: '8:00:00'
     mode: cmip6
-    # if default uses hh5 conda env
-    # conda_env to use by default hh5 analysis3-unstable
-    # as this has the code and all dependecies installed
-    # you can override that by supplying the env to pass to "source"
+    # if default uses xp62 conda env
+    # conda_env to use by default xp62 analysis3
+    # code needs to be installed by user
+    # you can override that by supplying a custom env
     # Ex
-    # conda_env: <custom-env-path>/bin/activate
+    # conda_env: <custom-env-path> 
+    # will add
+    # "source ~/.bashrc
+    # conda activate <custom-env>
     # to allow other settings use "test: true" and modify mopper_job.sh manually
     conda_env: default
 
@@ -127,20 +149,28 @@ attrs:
     institution_id: CSIRO-ARCCSS
     institution: "CSIRO (Commonwealth Scientific and Industrial Research Organisation, Aspendale, Victoria 3195, Australia), ARCCSS (Australian Research Council Centre of Excellence for Climate System Science)"
     # use this license for CMIP6
-    license: "CMIP6 model data produced by CSIRO is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License (https://creativecommons.org/licenses/). Consult https://pcmdi.llnl.gov/CMIP6/TermsOfUse for terms of use governing CMIP6 output, including citation requirements and proper acknowledgment.  Further information about this data, including some limitations, can be found via the further_info_url (recorded as a global attribute in this file). The data producers and data providers make no warranty, either express or implied, including, but not limited to, warranties of merchantability and fitness for a particular purpose. All liabilities arising from the supply of the information (including any liability arising in negligence) are excluded to the fullest extent permitted by law."
-    # Please provide a short description of the experiment. 
-    # For those created from the p73 archive, it's ok to just link 
-    # to the Archive Wiki.
-    exp_description: "CSIRO ACCESS-CM2 model output prepared for Pacemaker piControl experiment"
-    # All following attributes are requried by CMIP6, some of them don't have meaning outside of CMIP6 context
+    license: "CMIP6 model data produced by <institution> is licensed under a Creative Commons <license type> License (https://creativecommons.org/<license-code>). Consult https://pcmdi.llnl.gov/CMIP6/TermsOfUse for terms of use governing CMIP6 output, including citation requirements and proper acknowledgment. Further information about this data, including some limitations, can be found via the further_info_url (recorded as a global attribute in this file). The data producers and data providers make no warranty, either express or implied, including, but not limited to, warranties of merchantability and fitness for a particular purpose. All liabilities arising from the supply of the information (including any liability arising in negligence) are excluded to the fullest extent permitted by law."
+    # Fill in institution and specific license Ex:
+    #license: "CMIP6 model data produced by CSIRO is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License (https://creativecommons.org/licenses/). Consult https://pcmdi.llnl.gov/CMIP6/TermsOfUse for terms of use governing CMIP6 output, including citation requirements and proper acknowledgment.  Further information about this data, including some limitations, can be found via the further_info_url (recorded as a global attribute in this file). The data producers and data providers make no warranty, either express or implied, including, but not limited to, warranties of merchantability and fitness for a particular purpose. All liabilities arising from the supply of the information (including any liability arising in negligence) are excluded to the fullest extent permitted by law."
+    # for CMIP6Plus
+    # license: "CMIP6Plus model data produced by <institution> is licensed under a Creative Commons <license-type> License (https://creativecommons.org/<license-code>). Consult https://pcmdi.llnl.gov/CMIP6Plus/TermsOfUse for terms of use governing CMIP6Plus output, including citation requirements and proper acknowledgment. The data producers and data providers make no warranty, either express or implied, including, but not limited to, warranties of merchantability and fitness for a particular purpose. All liabilities arising from the supply of the information (including any liability arising in negligence) are excluded to the fullest extent permitted by law."
+    # Title is not required but recommended
+    title: "CSIRO ACCESS-CM2 model output prepared for CMIP6 CMIP piControl experiment"
+    experiment: "pre-industrial control"
     experiment_id: piControl                   # standard experiment name (e.g. piControl)
-    activity_id: CMIP                     # activity/MIP name (e.g. CMIP)
+    # Although optional a short description of the experiment is recommended 
+    # exp_description:
+    activity_id: CMIP                     
     mip_era: CMIP6
+    # for CMIP6Plus
+    #mip_era: CMIP6Plus
     realization_index: 1                          # "r1"[i1p1f1] (e.g. 1)
     initialization_index: 1                       # [r1]"i1"[p1f1] (e.g. 1)
     physics_index: 1                              # [r1i1]"p1"[f1] (e.g. 1)
     forcing_index: 1                              # [r1i1p1]"f1" (e.g. 1)
     variant_label: r1i1p1f1
+    # not required for CMIP6Plus
+    product: "model-output"
     source_type: AOGCM                           
     # NB source and source_id need to be defined in official CMIP6_CV.json 
     # currently available: ACCESS-ESM1-5, ACCESS-CM2,
@@ -150,15 +180,16 @@ attrs:
     source: "ACCESS-CM2 (2019): aerosol: UKCA-GLOMAP-mode, atmos: MetUM-HadGEM3-GA7.1 (N96; 192 x 144 longitude/latitude; 85 levels; top level 85 km), atmosChem: none, land: CABLE2.5, landIce: none, ocean: ACCESS-OM2 (GFDL-MOM5, tripolar primarily 1deg; 360 x 300 longitude/latitude; 50 levels; top grid cell 0-10 m), ocnBgchem: none, seaIce: CICE5.1.2 (same grid as ocean)"
     # ACCESS-ESM1.5 description
     #source: "ACCESS-ESM1.5 (2019): aerosol: CLASSIC (v1.0), atmos: HadGAM2 (r1.1, N96; 192 x 145 longitude/latitude; 38 levels; top level 39255 m), atmosChem: none, land: CABLE2.4, landIce: none, ocean: ACCESS-OM2 (MOM5, tripolar primarily 1deg; 360 x 300 longitude/latitude; 50 levels; top grid cell 0-10 m), ocnBgchem: WOMBAT (same grid as ocean), seaIce: CICE4.1 (same grid as ocean)"
-    # specifies the difference between the time units base and the first internal year (e.g. 365D0)
-    run_variant: "forcing: GHG, Oz, SA, Sl, Vl, BC, OC, (GHG = CO2, N2O, CH4, CFC11, CFC12, CFC113, HCFC22, HFC125, HFC134a)"
+    # variant_info is not required but recommended  
+    variant_info: "forcing: GHG, Oz, SA, Sl, Vl, BC, OC, (GHG = CO2, N2O, CH4, CFC11, CFC12, CFC113, HCFC22, HFC125, HFC134a)"
     calendar: "proleptic_gregorian"
     grid: "native atmosphere N96 grid (144x192 latxlon)"
     grid_label: "gn"
     nominal_resolution: "250 km"
     version: "v20220426"
     # Parent experiment details:
-    # if parent=false, all parent fields are automatically set to "no parent". 
+    # if parent=false, parent_experiment_id s set to "no parent"
+    # and other "parent_***" attributes are ignored
     # If true, defined values are used.
     #
     parent: !!bool false 
@@ -182,6 +213,6 @@ attrs:
     sub_experiment_id: none
     # DO NOT REMOVE OR ALTER this if you don't know what you're doing :-)
     #CMOR will add a tracking_id if you want to define a prefix add here
-    tracking_id_prefix:
-    Conventions: "CF-1.7 CMIP-6.2" 
-    comment: "post-processed using ACCESS-MOPPeR v1.2.0 https://doi.org/10.5281/zenodo.14322348"
+    tracking_prefix: "hdl:21.14100"
+    Conventions: "CF-1.7 CMIP-6.5" 
+    comment: "post-processed using ACCESS-MOPPeR v1.2.0 https://doi.org/10.5281/zenodo.17886415"

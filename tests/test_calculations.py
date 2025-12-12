@@ -63,7 +63,7 @@ def test_calc_topsoil(caplog, ctx):
     mrsol = create_var(2, 3, ntime=4, sdepth=True)
     expected = mrsol.isel(depth=0) + mrsol.isel(depth=1)/3.0
     with ctx:
-        out = calc_topsoil(mrsol)
+        out = calc_topsoil(ctx.obj, mrsol)
     xrtest.assert_allclose(out, expected, rtol=1e-05) 
 
 def test_overturn_stream(caplog, ctx):
@@ -90,29 +90,29 @@ def test_overturn_stream(caplog, ctx):
     varlist = [ty] 
     res1 = np.array([[[-4. , -5.5], [ 0. ,  0. ]]])
     with ctx:
-        out1 = overturn_stream(varlist)
+        out1 = overturn_stream(ctx.obj, varlist)
     nptest.assert_array_equal(res1, out1)
     # test units are sverdrup
     with ctx:
-        outsv = overturn_stream(varlist, sv=True)
+        outsv = overturn_stream(ctx.obj, varlist, sv=True)
     res1 = res1 * 10**9
     nptest.assert_array_equal(res1, outsv)
     # test with ty_trans and gm variable
     varlist = [ty, ty_gm] 
     res2 = np.array([[[2. , -0.5], [ 8. ,  11. ]]])
     with ctx:
-        out2 = overturn_stream(varlist)
+        out2 = overturn_stream(ctx.obj, varlist)
     nptest.assert_array_equal(res2, out2)
     # test with ty_trans and submeso variables
     varlist = [ty, ty_submeso] 
     res3 = np.array([[[5. , 2], [ 12. ,  16.5 ]]])
     with ctx:
-        out3 = overturn_stream(varlist)
+        out3 = overturn_stream(ctx.obj, varlist)
     nptest.assert_array_equal(res3, out3)
     # test with ty_trans, gm and submeso variables
     # and that input order shouldn't matter
     varlist = [ty_gm, ty_submeso, ty] 
     res4 = np.array([[[11. , 7], [ 20. ,  27.5 ]]])
     with ctx:
-        out4 = overturn_stream(varlist)
+        out4 = overturn_stream(ctx.obj, varlist)
     nptest.assert_array_equal(res4, out4)

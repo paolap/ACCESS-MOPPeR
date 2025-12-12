@@ -99,7 +99,6 @@ class FPattern():
         newlist = {}
         for f in files:
             short = f.name.replace(match,'')
-            basedir = f.parent
             res = re.search('|'.join(mlabels.keys()), short)
             if res is not None:
                 mon = res.group(0)

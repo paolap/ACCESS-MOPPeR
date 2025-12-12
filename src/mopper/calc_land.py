@@ -19,7 +19,7 @@
 # originally written for CMIP5 by Peter Uhe and dapted for CMIP6 by Chloe Mackallah
 # ( https://doi.org/10.5281/zenodo.7703469 )
 #
-# last updated 10/10/2024
+# last updated 04/12/2025
 #
 # This file contains a collection of functions to calculate land derived variables
 # from ACCESS model output.
@@ -29,12 +29,8 @@
 #
 # and open a new issue on github.
 
-import click
 import xarray as xr
-import os
-import json 
 import numpy as np
-import dask
 import logging
 from importlib.resources import files as import_files
 
@@ -55,15 +51,14 @@ R_e = 6.378E+06
 #----------------------------------------------------------------------
 
 
-@click.pass_context
-def extract_tilefrac(ctx, tilefrac, tilenum, landfrac=None, lev=None):
+def extract_tilefrac(obj, tilefrac, tilenum, landfrac=None, lev=None):
     """Calculates the land fraction of a specific type: crops, grass,
     etc.
 
     Parameters
     ----------
-    ctx : click context
-        Includes obj dict with 'cmor' settings, exp attributes
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
     tilefrac : Xarray DataArray
         variable 
     tilenum : Int or [Int]
@@ -84,7 +79,7 @@ def extract_tilefrac(ctx, tilefrac, tilenum, landfrac=None, lev=None):
         tile number must be an integer or list
 
     """    
-    var_log = logging.getLogger(ctx.obj['var_log'])
+    var_log = logging.getLogger(obj['var_log'])
     pseudo_level = tilefrac.dims[1]
     tilefrac = tilefrac.rename({pseudo_level: 'pseudo_level'})
     vout = tilefrac.sel(pseudo_level=tilenum)
@@ -95,7 +90,7 @@ def extract_tilefrac(ctx, tilefrac, tilenum, landfrac=None, lev=None):
     else:
         raise Exception('E: tile number must be an integer or list')
     if landfrac is None: 
-        landfrac = get_ancil_var('land_frac', 'fld_s03i395')
+        landfrac = get_ancil_var(obj, 'land_frac', 'fld_s03i395')
     vout = vout * landfrac
     if lev:
         fname = import_files('mopdata').joinpath('landtype.yaml')
@@ -106,8 +101,7 @@ def extract_tilefrac(ctx, tilefrac, tilenum, landfrac=None, lev=None):
     return vout.fillna(0)
 
 
-@click.pass_context
-def landuse_frac(ctx, var, landfrac=None, nwd=0, tiles='cmip6'):    
+def landuse_frac(obj, var, landfrac=None, nwd=0, tiles='cmip6'):    
     """Defines new tile fractions variables where 
     original model tiles are re-organised in 4 super-categories
 
@@ -142,6 +136,8 @@ def landuse_frac(ctx, var, landfrac=None, nwd=0, tiles='cmip6'):
 
     Parameters
     ----------
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
     var : Xarray DataArray
         Tile variable 
     landfrac : Xarray DataArray
@@ -158,7 +154,7 @@ def landuse_frac(ctx, var, landfrac=None, nwd=0, tiles='cmip6'):
         Input tile variable redifined over 4 super-categories 
 
     """
-    var_log = logging.getLogger(ctx.obj['var_log'])
+    var_log = logging.getLogger(obj['var_log'])
     pseudo_level = var.dims[1]
     #nwd (non-woody vegetation only) - tiles 6,7,9,11 only
     vout = xr.zeros_like(var[:, :4, :, :])
@@ -183,7 +179,7 @@ def landuse_frac(ctx, var, landfrac=None, nwd=0, tiles='cmip6'):
     #if nwd == 0:
     vout.loc[dict(landUse='urban')] = var.sel({pseudo_level: 15})
     if landfrac is None:
-        landfrac = get_ancil_var('land_frac', 'fld_s03i395')
+        landfrac = get_ancil_var(obj, 'land_frac', 'fld_s03i395')
     vout = vout * landfrac
     # if nwdFracLut we want typenwd as an extra dimension as axis=0
     if nwd == 1:
@@ -191,7 +187,7 @@ def landuse_frac(ctx, var, landfrac=None, nwd=0, tiles='cmip6'):
     return vout
 
 
-def average_tile(var, tilefrac=None, lfrac=1, landfrac=None, lev=None):
+def average_tile(obj, var, tilefrac=None, lfrac=1, landfrac=None, lev=None):
     """Returns variable averaged over grid-cell, counting only
     specific tile/s and land fraction when suitable.
 
@@ -202,6 +198,8 @@ def average_tile(var, tilefrac=None, lfrac=1, landfrac=None, lev=None):
 
     Parameters
     ----------
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
     var : Xarray DataArray
         Variable to process defined opver tiles
     tilefrac : Xarray DataArray, optional 
@@ -221,14 +219,15 @@ def average_tile(var, tilefrac=None, lfrac=1, landfrac=None, lev=None):
         averaged input variable
 
     """    
+    var_log = logging.getLogger(obj['var_log'])
     pseudo_level = var.dims[1]
     if tilefrac is None:
-        tilefrac = get_ancil_var('land_tile', 'fld_s03i317')
+        tilefrac = get_ancil_var(obj, 'land_tile', 'fld_s03i317')
     vout = var * tilefrac
     vout = vout.sum(dim=pseudo_level)
     if lfrac == 1:
         if landfrac is None:
-            landfrac = get_ancil_var('land_frac', 'fld_s03i395')
+            landfrac = get_ancil_var(obj, 'land_frac', 'fld_s03i395')
         vout = vout * landfrac
     if lev:
         fname = import_files('mopdata').joinpath('landtype.yaml')
@@ -238,14 +237,13 @@ def average_tile(var, tilefrac=None, lfrac=1, landfrac=None, lev=None):
     return vout
 
 
-@click.pass_context
-def calc_topsoil(ctx, soilvar):
+def calc_topsoil(obj, soilvar):
     """Returns the variable over the first 10cm of soil.
 
     Parameters
     ----------
-    ctx : click context
-        Includes obj dict with 'cmor' settings, exp attributes
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
     soilvar : Xarray DataArray
         Soil moisture over soil levels 
 
@@ -255,7 +253,7 @@ def calc_topsoil(ctx, soilvar):
         Variable defined on top 10cm of soil
 
     """    
-    var_log = logging.getLogger(ctx.obj['var_log'])
+    var_log = logging.getLogger(obj['var_log'])
     depth = soilvar.depth
     # find index of bottom depth level including the first 10cm of soil
     maxlev = np.nanargmin(depth.where(depth >= 0.1).values)
@@ -267,13 +265,12 @@ def calc_topsoil(ctx, soilvar):
     return topsoil
 
 
-@click.pass_context
-def calc_landcover(ctx, var, model):
+def calc_landcover(obj, var, model):
     """Returns land cover fraction variable
 
     Parameters
     ----------
-    ctx : click context obj
+    obj : dict obj
         Dictionary including 'cmor' settings and attributes for experiment
     var : list(xarray.DataArray)
         List of input variables to sum
@@ -286,7 +283,7 @@ def calc_landcover(ctx, var, model):
         Land cover faction variable
 
     """
-    var_log = logging.getLogger(ctx.obj['var_log'])
+    var_log = logging.getLogger(obj['var_log'])
     fname = import_files('mopdata').joinpath('land_tiles.yaml')
     data = read_yaml(fname)
     vegtype = data[model]

@@ -16,11 +16,10 @@
 #
 # contact: paola.petrelli@utas.edu.au
 #
-# last updated 08/10/2024
+# last updated 08/12/2025
 #
 
 import logging
-import sys
 import csv
 import json
 
@@ -116,11 +115,11 @@ def cmor_update_sql():
     sql : str
         SQL style string updating cmorvar table
     """
-    cols = ['name', 'frequency', 'modeling_realm', 'standard_name',
-            'units', 'cell_methods', 'cell_measures', 'long_name',
-            'comment', 'dimensions', 'out_name', 'type', 'positive',
-            'valid_min', 'valid_max', 'flag_values', 'flag_meanings',
-            'ok_min_mean_abs', 'ok_max_mean_abs']
+    cols = ['name', 'cell_methods', 'cell_measures',
+            'comment', 'dimensions', 'frequency', 'long_name',
+            'modeling_realm', 'ok_max_mean_abs', 'ok_min_mean_abs',
+            'out_name', 'positive', 'standard_name', 'type', 'units',
+            'valid_max', 'valid_min', 'flag_meanings', 'flag_values']
     sql = f"""REPLACE INTO cmorvar ({', '.join(cols)}) VALUES
           ({','.join(['?']*len(cols))}) ON CONFLICT (name) DO UPDATE SET
           {', '.join(x+' = excluded.'+x for x in cols)}"""
@@ -159,7 +158,7 @@ def update_db(conn, table, rows_list):
     return
 
 
-def cmor_table_header(name, realm, frequency):
+def cmor_table_header(name, frequency):
     """
     """
     today = date.today()
@@ -167,18 +166,17 @@ def cmor_table_header(name, realm, frequency):
                 'day': "1.0", '6hr': "0.25", '3hr': "0.125",
                 '1hr': "0.041667", '10min': "0.006944", 'fx': "0.0"}
     header = {
-        "data_specs_version": "01.00.33",
-        "cmor_version": "3.5",
-        "table_id": f"Table {name}",
-        "realm": realm,
-        "table_date": today.strftime("%d %B %Y"),
-        "missing_value": "1e20",
-        "int_missing_value": "-999",
-        "product": "model-output",
+        "Conventions": "CF-1.7 ACDD1.3",
         "approx_interval": interval[frequency],
+        "checksum": "",
+        "cmor_version": "3.13.0",
+        "data_specs_version": "6.5.0.0",
         "generic_levels": "",
-        "mip_era": "",
-        "Conventions": "CF-1.7 ACDD1.3"
+        "int_missing_value": "-999",
+        "missing_value": "1e20",
+        "product": "model-output",
+        "table_date": today.strftime("%d %B %Y"),
+        "table_id": f"Table {name}",
     }
     return header
 
@@ -187,14 +185,7 @@ def write_cmor_table(var_list, name):
     """
     """
     mopdb_log = logging.getLogger('mopdb_log')
-    realms = [v[2] for v in var_list]
-    setr = set(realms)
-    if len(setr) > 1:
-        realm = Counter(realms).most_common(1)[0][0]
-        mopdb_log.info(f"More than one realms found for variables: {setr}")
-        mopdb_log.info(f"Using: {realm}")
-    else:
-        realm = realms[0]
+    print(var_list[0])
     freqs = [v[1] for v in var_list]
     setf = set(freqs)
     if len(setf) > 1:
@@ -203,7 +194,7 @@ def write_cmor_table(var_list, name):
         mopdb_log.info(f"Using: {frequency}")
     else:
         frequency = freqs[0]
-    header = cmor_table_header(name, realm, frequency)
+    header = cmor_table_header(name, frequency)
     out = {"Header": header, "variable_entry": []}
     keys = ["frequency", "modeling_realm",
             "standard_name", "units",
@@ -214,6 +205,8 @@ def write_cmor_table(var_list, name):
             "ok_min_mean_abs", "ok_max_mean_abs"] 
     var_dict = {}
     for v in var_list:
+        # convert realm to list
+        v[2] = v[2].split(" ")
         var_dict[v[0]] = dict(zip(keys, v[1:]))
     out["variable_entry"] = var_dict
     jfile = f"CMOR_{name}.json"
@@ -455,9 +448,9 @@ def identify_patterns(files):
             # should be possible to eventually removing this
             labels = ['jan', 'feb', 'mar', 'apr', 'may', 'jun',
                       'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
-            for l in labels:
-                first = first.replace(l,'')
-                fnext = fnext.replace(l,'')
+            for lab in labels:
+                first = first.replace(lab,'')
+                fnext = fnext.replace(lab,'')
             i = len(first)
             while i >= 1:
                 i-=1
@@ -479,3 +472,28 @@ def identify_patterns(files):
             mopdb_log.debug(f"identify_patterns: last identified {last_pattern}")
         n+=1
     return patterns, patpaths
+
+
+def process_table_row(name, row, alias):
+    """
+    """
+    # alter the name so it reflects also its origin
+    name = f"{name}-{alias}"
+    cols = ['cell_methods', 'cell_measures',
+            'comment', 'dimensions', 'frequency', 'long_name',
+            'modeling_realm', 'ok_max_mean_abs', 'ok_min_mean_abs',
+            'out_name', 'positive', 'standard_name', 'type', 'units',
+            'valid_max', 'valid_min']
+    values = [name]
+    for k in cols:
+        val = row[k] 
+        if isinstance(val, list):
+            values.append( " ".join(val) )
+        else:
+            values.append(val)
+    # check if flag attrs present if not add them
+    if 'flag_values' not in row.keys():
+        values = values[:-2] + ['',''] + values[-2:]
+    else:
+        values.extend([row['flag_meanings'], row['flag_values']])
+    return values

@@ -28,8 +28,9 @@ import os
 
 def get_rows(conn, exp):
     cursor = conn.cursor()
-    cursor.execute("""SELECT filename,variable_id,ctable,calculation, 
-                   vin,status,ROWID FROM filelist WHERE exp_id == ?""",
+    cursor.execute("""SELECT filename,variable_id,ctable,calculation,
+               
+        resample,vin,status,ROWID FROM filelist WHERE exp_id == ?""",
                     (exp,))
     rows = cursor.fetchall()
     return rows
@@ -70,7 +71,7 @@ def update_map(conn, varid, ctable):
          data = json.load(f)
     found = False
     for row in data:
-        if row['cmor_var'] == varid and row['cmor_table'] == ctable:
+        if row['cmor_var'] == varid:
             found = True
             break
     if found: 
@@ -97,7 +98,7 @@ def update_map(conn, varid, ctable):
         print(f"Updated {cur.rowcount} rows\n")
         conn.commit()
     else:
-        print(f"No match for {varid}, {ctable} in maps/{ctable}.json")
+        print(f"No match for {varid} in maps/{ctable}.json")
     return
 
 
@@ -117,14 +118,15 @@ def get_summary(rows):
 
     flist = {k:set() for k in status_msg.keys()}
     for r in rows:
-        if r[5] != 'processed':
-            flist[r[5]].add((r[1],r[2],r[3],r[4]))
+        if r[6] != 'processed':
+            flist[r[6]].add((r[1],r[2],r[3],r[4],r[5]))
     for k,value in flist.items():
         if len(value) > 0:
            print(status_msg[k] + "\n")
            for v in value:
-               print(f"Variable {v[0]} - {v[1]};" +
-                     f"calculation: {v[2]} with input {v[3]}") 
+               print(f"Variable {v[0]} - {v[1]}; " +
+                     f"calculation: {v[2]} with input {v[4]}; "+
+                     f"resample: {v[3]}") 
     print("")
     return flist
 
@@ -153,6 +155,7 @@ def process_var(conn, flist, varname=None):
                 update_status(conn, v[0], v[1], k, 'unprocessed')
                 ans = input("Update mapping? (Y/N)  ")
                 if ans == 'Y':
+                    print('variable',v)
                     update_map(conn, v[0], v[1]) 
                 
     return

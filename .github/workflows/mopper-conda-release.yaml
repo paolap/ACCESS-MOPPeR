@@ -13,15 +13,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-         python-version: ["3.10"]
+         python-version: ["3.14"]
     steps:
-      - uses: actions/checkout@v4.1.7
+      - uses: actions/checkout@v6.0.1
         with:
           fetch-depth: 0
       - name: Set env
         run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: Conda environment creation and activation
-        uses: conda-incubator/setup-miniconda@v3.0.4
+        uses: conda-incubator/setup-miniconda@v3.2.0
         with:
           python-version: ${{ matrix.python-version }}
           activate-environment: mopper_env 
@@ -31,11 +31,11 @@ jobs:
           auto-update-conda: false
           show-channel-urls: true #
       - name: Build and upload the conda packages
-        uses: uibcdf/action-build-and-upload-conda-packages@v1.3.0
+        uses: uibcdf/action-build-and-upload-conda-packages@v1.4.0
         with:
           meta_yaml_dir: conda
           python-version: ${{ matrix.python-version }} 
-          user: coecms
+          user: ${{ secrets.ANACONDAUSER }}
           label: auto
           upload: true
-          token: ${{ secrets.ANACONDA_TOKEN }} # Replace with the right name of your secret
+          token: ${{ secrets.ANACONDATOKEN }} # Replace with the right name of your secret

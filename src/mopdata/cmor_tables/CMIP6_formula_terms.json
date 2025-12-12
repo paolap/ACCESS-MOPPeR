@@ -1,4 +1,13 @@
 {
+	 "Header": {
+        "data_specs_version": "01.00.33",
+        "table_id": "Table formula_terms",
+        "cmor_version": "3.13",
+        "table_date": "18 November 2020",
+        "missing_value": "1e20",
+        "product": "output",
+        "Conventions": "CF-1.7 CMIP-6.5"
+    },
     "formula_entry": {
         "a": {
             "long_name": "vertical coordinate formula term: a", 

@@ -67,6 +67,7 @@ def config_log(debug, logname):
     # return the logger object
     return logger
 
+
 def db_connect(db, logname='__name__'):
     """Connects to ACCESS mapping sqlite database"""
     log = logging.getLogger(logname)
@@ -74,6 +75,7 @@ def db_connect(db, logname='__name__'):
     if conn.total_changes == 0:
         log.info(f"Opened database {db} successfully")
     return conn 
+
 
 def create_table(conn, sql, logname='__name__'):
     """Creates table if database is empty
@@ -92,6 +94,7 @@ def create_table(conn, sql, logname='__name__'):
         log.error(e)
         raise MopException(e)
     return
+
 
 def query(conn, sql, tup=(), first=True, logname='__name__'):
     """Executes generic sql query and returns row/s
@@ -178,6 +181,7 @@ def delete_record(conn, table, col, pairs, logname='__name__'):
         log.info("The query did not return any records")
     return
 
+
 def read_yaml(fname, logname='__name__'):
     """Read yaml file
     """
@@ -189,6 +193,7 @@ def read_yaml(fname, logname='__name__'):
         log.error(f"Check that {fname} exists and it is a valid yaml file")
         raise MopException(e)
     return data
+
 
 def write_yaml(data, fname, logname='__name__'):
     """Write data to a yaml file

@@ -19,7 +19,7 @@
 # originally written for CMIP5 by Peter Uhe and dapted for CMIP6 by Chloe Mackallah
 # ( https://doi.org/10.5281/zenodo.7703469 )
 #
-# last updated 08/10/2024
+# last updated 10/12/2025
 #
 # This file contains a collection of functions to calculate atmospheric
 # derived variables from ACCESS model output.
@@ -30,17 +30,13 @@
 # and open a new issue on github.
 
 
-import click
 import xarray as xr
-import os
-import json 
 import numpy as np
 import dask
 import logging
 from metpy.calc import height_to_geopotential 
-from importlib.resources import files as import_files
 
-from mopdb.utils import read_yaml, MopException
+from mopdb.utils import MopException
 from mopper.calc_utils import rename_coord, get_plev, sum_vars
 
 # Global Variables
@@ -56,8 +52,7 @@ g_0 = 9.8067   # gravity constant
 R_e = 6.378E+06
 
 
-@click.pass_context
-def height_gpheight(ctx, hslv, pmod=None, levnum=None):
+def height_gpheight(obj, hslv, pmod=None, levnum=None):
     """Returns geopotential height based on model levels height from
     sea level, using metpy.height_to_geopotential() function
 
@@ -66,8 +61,8 @@ def height_gpheight(ctx, hslv, pmod=None, levnum=None):
 
     Parameters
     ----------
-    ctx : click context
-        Includes obj dict with 'cmor' settings, exp attributes
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
     hslv : xarray.DataArray
         Height of model levels from sea level
     pmod : Xarray DataArray
@@ -82,9 +77,8 @@ def height_gpheight(ctx, hslv, pmod=None, levnum=None):
         Geopotential height on model or pressure levels
 
     """
-    
-    var_log = logging.getLogger(ctx.obj['var_log'])
-    geopot = height_to_geopotential(hslv)
+    var_log = logging.getLogger(obj['var_log']) 
+    geopot = height_to_geopotential(obj, hslv)
     gpheight_vals = geopot / g_0
     gpheight = xr.zeros_like(hslv)
     gpheight[:] = gpheight_vals
@@ -93,26 +87,25 @@ def height_gpheight(ctx, hslv, pmod=None, levnum=None):
             var_log.error("Pressure levels need to be defined using levnum")
             raise MopException("Pressure levels need to be defined using levnum")   
         else:
-            # check time axis gpheighe is same or interpolate
-            gpheight, override = rename_coord(pmod, gpheight, 0) 
+            # check time axis gpheight is same or interpolate
+            gpheight, override = rename_coord(obj, pmod, gpheight, 0) 
             var_log.debug(f"override: {override}")
             if override is True:
                 gpheight = gpheight.reindex_like(pmod, method='nearest')
-            gpheight = plevinterp(gpheight, pmod, levnum)
+            gpheight = plevinterp(obj, gpheight, pmod, levnum)
 
     return gpheight
 
 
-@click.pass_context
-def plevinterp(ctx, var, pmod, levnum):
+def plevinterp(obj, var, pmod, levnum):
     """Interpolating var from model levels to pressure levels
     
     Based on function from Dale Roberts (currently ANU)
 
     Parameters
     ----------
-    ctx : click context
-        Includes obj dict with 'cmor' settings, exp attributes
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
     var : Xarray DataArray 
         The variable to interpolate dims(time, lev, lat, lon)
     pmod : Xarray DataArray
@@ -127,11 +120,10 @@ def plevinterp(ctx, var, pmod, levnum):
         The variable interpolated on pressure levels
 
     """
-
-    var_log = logging.getLogger(ctx.obj['var_log'])
+    var_log = logging.getLogger(obj['var_log'])
     # avoid dask warning
     dask.config.set(**{'array.slicing.split_large_chunks': True})
-    plev = get_plev(levnum)
+    plev = get_plev(obj, levnum)
     lev = var.dims[1]
     # if pmod is pressure on rho_level_0 and variable is on rho_level
     # change name and remove last level
@@ -141,8 +133,8 @@ def plevinterp(ctx, var, pmod, levnum):
         pmod = pmod.rename({pmodlev: lev})
     # we can assume lon_0/lat_0 are same as lon/lat for this purpose 
     # if pressure and variable have different coordinates change name
-    pmod, override = rename_coord(var, pmod, 2) 
-    pmod, override = rename_coord(var, pmod, 3, override=override) 
+    pmod, override = rename_coord(obj, var, pmod, 2) 
+    pmod, override = rename_coord(obj, var, pmod, 3, override=override) 
     var_log.debug(f"override: {override}")
     if override is True:
         pmod = pmod.reindex_like(var, method='nearest')
@@ -179,13 +171,15 @@ def plevinterp(ctx, var, pmod, levnum):
 # Aerosol Calculations
 #----------------------------------------------------------------------
 
-def optical_depth(var, lwave):
+def optical_depth(obj, var, lwave):
     """
     Calculates the optical depth.
     First selects all variables at selected wavelength then sums them.
 
     Parameters
     ----------
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
     var: DataArray
         variable from Xarray dataset
     lwave: int 
@@ -197,15 +191,15 @@ def optical_depth(var, lwave):
         Optical depth
 
     """
+    var_log = logging.getLogger(obj['var_log'])
     pseudo_level = var[0].dims[1]
     var_list = [v.sel(pseudo_level=lwave) for v in var]
-    vout = sum_vars(var_list)
+    vout = sum_vars(obj, var_list)
     vout = vout.rename({pseudo_level: 'pseudo_level'})
     return vout
 
 
-@click.pass_context
-def calc_depositions(ctx, var, weight=None):
+def calc_depositions(obj, var, weight=None):
     """Returns aerosol depositions
 
     At the moment is assuming sea salt will need more work to be
@@ -220,8 +214,8 @@ def calc_depositions(ctx, var, weight=None):
   
     Parameters
     ----------
-    ctx : click context
-        Includes obj dict with 'cmor' settings, exp attributes
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
     var : list(xarray.DataArray)
         List of input variables to sum
     weight: float
@@ -233,30 +227,28 @@ def calc_depositions(ctx, var, weight=None):
         Areosol depositions  
 
     """
-
-    #var_log = logging.getLogger(ctx.obj['var_log'])
+    var_log = logging.getLogger(obj['var_log'])
     varlist = []
     for v in var:
         v0 = v.sel(model_theta_level_number=1)#
         varlist.append(v0)
     if weight is None:
         weight = 0.05844
-    deps = sum_vars(varlist) * weight
+    deps = sum_vars(obj, varlist) * weight
     return deps
 
 
 # Utilities
 #----------------------------------------------------------------------
 
-@click.pass_context
-def level_to_height(ctx, var, levs=None):
+def level_to_height(obj, var, levs=None):
     """Returns model level variable with level height instead of 
     number as dimension
 
     Parameters
     ----------
-    ctx : click context
-        Includes obj dict with 'cmor' settings, exp attributes
+    obj : dict
+        click context obj dict with 'cmor' settings, exp attributes
     var : Xarray DataArray
         Variable defined on model levels number
     levs : tuple(str,str)
@@ -268,13 +260,14 @@ def level_to_height(ctx, var, levs=None):
         Same variable defined on model levels height
 
     """    
-    var_log = logging.getLogger(ctx.obj['var_log'])
+    var_log = logging.getLogger(obj['var_log'])
     if levs is not None and type(levs) not in [tuple, list]:
          var_log.error(f"level_to_height function: levs {levs} should be a tuple or list")  
          raise MopException(f"level_to_height function: levs {levs} should be a tuple or list")   
     zdim = var.dims[1]
     zdim_height = zdim.replace('number', 'height').replace('model_','')
     var = var.swap_dims({zdim: zdim_height})
+    var_log.debug(f"{var[zdim_height].attrs}")
     if levs is not None:
         var = var.isel({zdim_height: slice(int(levs[0]), int(levs[1]))})
     return var

@@ -19,7 +19,7 @@
 # originally written for CMIP5 by Peter Uhe and dapted for CMIP6 by Chloe Mackallah
 # ( https://doi.org/10.5281/zenodo.7703469 )
 #
-# last updated 01/08/2025
+# last updated 10/12/2025
 
 import os
 import shutil
@@ -151,7 +151,7 @@ def find_nearest(varlist, frequency):
         freq = frequency.replace('C','')
     resample_order = ['10yr', 'yr', 'mon', '10day', '7day',
             'day', '12hr', '6hr', '3hr', '1hr', '30min', '10min']
-    resample_frq = {'10yr': '10Y', 'yr': 'Y', 'mon': 'M', '10day': '10D',
+    resample_frq = {'10yr': '10Y', 'yr': 'Y', 'mon': 'ME', '10day': '10D',
                     '7day': '7D', 'day': 'D', '12hr': '12h', '6hr': '6h',
                     '3hr': '3h', '1hr': 'h', '30min': '30min'}
     freq_idx = resample_order.index(freq)
@@ -217,7 +217,8 @@ def setup_env(ctx):
         path =  Path(cdict['conda_env'])
         if not path.is_absolute():
             path = appdir / path
-        cdict['conda_env'] = f"source {str(path)}"
+        #cdict['conda_env'] = f"source {str(path)}"
+        cdict['conda_env'] = f"source ~/.bashrc \nconda activate {str(path)}"
     mop_log.debug(f"Setting env, conda_env: {cdict['conda_env']}")
     # Output subdirectories
     outpath = cdict['outpath']
@@ -240,11 +241,14 @@ def setup_env(ctx):
     mop_log.debug(f"""Setup_env dates ref, start and end: 
         {cdict['reference_date']},
         {cdict['start_date']}, {cdict['end_date']}""")
-    # if parent False set parent attrs to 'no parent'
+    # if parent False set parent_experiment_id to 'no parent' and
+    # ignore all other attrs starting with parent_ or branch_
     if cdict['attrs']['parent'] is False and cdict['mode'] == 'cmip6':
-        p_attrs = [k for k in cdict['attrs'].keys() if 'parent' in k]
+        p_attrs = [k for k in cdict['attrs'].keys() if any(
+            k.startswith(x) for x in ['parent_', 'branch_'])]
         for k in p_attrs:
-            cdict['attrs'][k] = 'no parent'
+            cdict['attrs'].pop(k)
+        cdict['attrs']['parent_experiment_id'] = 'no parent'
     ctx.obj = cdict
     return ctx
 
@@ -382,6 +386,9 @@ def create_var_map(ctx, table, mappings, varsel, activity_id=None,
             continue
         frq = row['frequency']
         realm = row['modeling_realm']
+        # new tables can have realm as a list
+        if isinstance(realm, list):
+            realm = " ".join(realm)
         years = 'all'
         if ctx.obj['force_dreq'] and var in all_dreq:
             years = dreq_years[var]
@@ -475,6 +482,7 @@ def manage_env(ctx):
     # copy tables to working directory
     # check if present in tables_path or copy from packaged data
     # copy CV file as CMIP6_CV.json (remove when cmor bug is fixed)
+    # cmor 3.13 (Dec 2025) still hardcoded
     for f in ['_AXIS_ENTRY_FILE', '_FORMULA_VAR_FILE', 'grids',
          '_control_vocabulary_file']:
         fpath = ctx.obj['tables_path'] / ctx.obj[f]
@@ -488,6 +496,7 @@ def manage_env(ctx):
                  fpath = workdir / "tables/CMIP6_CV.json"
         else:
             fname = ctx.obj[f]
+    #    fname = ctx.obj[f]
         shutil.copyfile(fpath, ctx.obj['tpath'] / fname)
     update_code = import_files('mopdata').joinpath("update_db.py.txt")
     shutil.copyfile(update_code, ctx.obj['outpath'] / "update_db.py")
