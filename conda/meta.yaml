@@ -8,21 +8,23 @@ package:
 source:
   #url: https://github.com/paolap/ACCESS-MOPPeR/archive/refs/tags/{{ environ.get('RELEASE_VERSION') }}.tar.gz
   #url: https://github.com/paolap/ACCESS-MOPPeR/tree/prerelease
-  url: https://github.com/paolap/ACCESS-MOPPeR/tree/1.5.0
-  #git_url: https://github.com/paolap/ACCESS-MOPPeR.git
-  #git_tag: "1.5.0"
+  git_url: https://github.com/paolap/ACCESS-MOPPeR.git
+  git_tag: "1.5.0"
   #git_rev: "1.5.0"
   #git_depth: 1 # (Defaults to -1/not shallow)
 
 build:
     number: 1
     noarch: python
-    script: "{{ PYTHON }} -m pip install . --no-deps --ignore-installed"
+    script: "{{ PYTHON }} -m pip install . --no-deps --ignore-installed --no-build-isolation --no-cache-dir"
     entry_points:
         - mop = mopper.mopper:mop_catch
         - mopdb = mopdb.mopdb:mopdb
 
 requirements:
+    build: 
+        - python
+        - setuptools <=79.0.1
     host:
         - python
         - pip

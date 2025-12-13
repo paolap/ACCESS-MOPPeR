@@ -6,6 +6,6 @@
 from setuptools import setup
 
 setup(
-        setup_requires=['setuptools-scm', 'setuptools'],
+        setup_requires=['setuptools-scm', 'setuptools<=79.0.1'],
         )
 
