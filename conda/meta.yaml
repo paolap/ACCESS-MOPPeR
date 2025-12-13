@@ -22,6 +22,9 @@ build:
         - mopdb = mopdb.mopdb:mopdb
 
 requirements:
+    build: 
+        - python
+        - setuptools <=79.0.1
     host:
         - python
         - pip

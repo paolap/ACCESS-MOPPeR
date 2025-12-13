@@ -60,7 +60,7 @@ sistrxubot;sistrxubot;;N m-2;time nj ni;longitude latitude time;mon;seaIce;area:
 sistrydtop;sistrydtop;;N m-2;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;down;MIP_SImon;CM2;float32;432000;1200;iceh_m.;y component of atmospheric stress on sea ice;surface_downward_y_stress
 sistryubot;sistryubot;;N m-2;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;up;MIP_SImon;CM2;float32;432000;1200;iceh_m.;y component of ocean stress on sea ice;upward_y_stress_at_sea_ice_base
 sitempbot;sitempbot;;K;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;sea ice bottom temperature;sea_ice_basal_temperature
-sitempsnic;sitempsnic;K_degC(obj,var[0],inverse=True);K;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;snow ice interface temperature;sea_ice_surface_temperatureCMIP6_SImon;CM2
+sitempsnic;sitempsnic;K_degC(obj,var[0],inverse=True);K;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;snow ice interface temperature;sea_ice_surface_temperature
 sitemptop;sitemptop;K_degC(obj,var[0],inverse=True);K;time nj ni;longitude latitude time;day;seaIce;area: time: mean;;MIP_SIday;CM2;float32;432000;37200;iceh_d.;sea ice surface temperature;sea_ice_surface_temperature
 sndmassmelt;sndmassmelt;var[0]*-1/1800;kg m-2 s-1;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;snow mass change from melt;surface_snow_melt_flux
 sndmasssnf;sndmasssnf;var[0]/1800;kg m-2 s-1;time nj ni;longitude latitude time;mon;seaIce;area: time: mean;;MIP_SImon;CM2;float32;432000;1200;iceh_m.;snow mass change from snow fall;snowfall_flux
