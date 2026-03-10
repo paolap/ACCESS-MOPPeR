@@ -14,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# contact: paola.petrelli@utas.edu.au
+# contact: paola.petrelli@anu.edu.au
 #
-# last updated 08/12/2025
+# last updated 10/03/2026
 #
 
 import logging
@@ -136,6 +136,7 @@ def get_file_frq(ds, fnext, int2frq):
                         frq[t] = k
                         break
     return frq
+
 
 def write_varlist(conn, indir, version, alias):
     """Based on model output files create a variable list and save it
@@ -292,7 +293,7 @@ def parse_vars(conn, vobjs, version):
     Returns
     -------
     stash_vars : list
-        varname-frequency for each listed variable, varname is from model output
+        <varname:frequency> for each listed variable, varname is from model output
     """
     mopdb_log = logging.getLogger('mopdb_log')
     full = []
@@ -326,7 +327,7 @@ def parse_vars(conn, vobjs, version):
             vmatch = v.get_match()
             mopdb_log.debug(f"Getting match from variable: {vmatch}")
             no_match = add_var(no_match, v, vmatch) 
-        stash_vars.append(f"{v.name}-{v.frequency}")
+        stash_vars.append(f"{v.name}:{v.frequency}")
 
     return full, no_ver, no_frq, stdn, no_match, stash_vars 
 
@@ -348,7 +349,7 @@ def add_var(vlist, vobj, match, stdnm=False):
     if stdnm: 
         var.input_vars = vobj.name
         if len(var.cmor_var) == 1:
-            cmor_var, table = var.cmor_var[0].split("-")
+            cmor_var, table = var.cmor_var[0].split(":")
             var.cmor_var = cmor_var
             var.cmor_table = table 
     vlist.append(var)
@@ -369,7 +370,7 @@ def potential_vars(conn, vobjs, stash_vars, version):
     rows : list(dict)
          list of variables to match
     stash_vars : list
-        varname-frequency for each listed variable, varname is from model output
+        <varname:frequency> for each listed variable, varname is from model output
     version : str
         model version to use to match variables
 
@@ -389,8 +390,8 @@ def potential_vars(conn, vobjs, stash_vars, version):
         for r in results:
             allinput = r[1].split(" ")
             mopdb_log.debug(f"{len(allinput)> 1}")
-            mopdb_log.debug(all(f"{x}-{v.frequency}" in stash_vars for x in allinput))
-            if len(allinput) > 1 and all(f"{x}-{v.frequency}" in stash_vars for x in allinput):
+            mopdb_log.debug(all(f"{x}:{v.frequency}" in stash_vars for x in allinput))
+            if len(allinput) > 1 and all(f"{x}:{v.frequency}" in stash_vars for x in allinput):
                 # if both version and frequency of applied mapping match
                 # consider this a full matching potential var 
                 if r[5] == version and r[3] == v.frequency:
@@ -450,6 +451,7 @@ def write_map_template(conn, parsed, alias):
         fcsv.close()
     return
 
+
 def write_vars(vlist, fwriter, div, conn=None, sortby='cmor_var'):
     """
     """
@@ -473,6 +475,7 @@ def write_vars(vlist, fwriter, div, conn=None, sortby='cmor_var'):
             fwriter.writerow(dvar)
     return
 
+
 def map_variables(conn, vobjs, version):
     """
     """
@@ -495,6 +498,7 @@ def map_variables(conn, vobjs, version):
     mopdb_log.info(f"Derived variables: {pot_varnames}")
     return full, no_ver, no_frq, stdn, no_match, pot_full, pot_part 
 
+
 def get_map_obj(parsed):
     """Returns list of variable objects to pass to intake"""
     full, no_ver, no_frq, stdn, no_match, pot_full, pot_part = parsed
@@ -504,10 +508,10 @@ def get_map_obj(parsed):
         vobjs.append(v)
     return vobjs
 
+
 def write_catalogue(conn, vobjs, fobjs, alias):
     """Write intake-esm catalogue and returns name
     """
-
     mopdb_log = logging.getLogger('mopdb_log')
     # read template json file 
     jfile = import_files('mopdata').joinpath('intake_cat_template.json')

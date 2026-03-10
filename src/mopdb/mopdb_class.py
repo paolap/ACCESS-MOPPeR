@@ -14,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# contact: paola.petrelli@utas.edu.au
+# contact: paola.petrelli@anu.edu.au
 #
-# last updated 03/10/2024
+# last updated 10/03/2026
 
 from pathlib import Path
 from operator import itemgetter

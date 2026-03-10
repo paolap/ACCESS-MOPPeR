@@ -14,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# contact: paola.petrelli@utas.edu.au
+# contact: paola.petrelli@anu.edu.au
 #
-# last updated 08/10/2024
+# last updated 10/03/2026
 
 import click
 import logging
@@ -124,7 +124,7 @@ def check_cmor(ctx, dbname):
     # second set is the name used in tables to distinguish different dims/freq
     # original maps files use the second style
     cmor_vars = set(x[1] for x in results)
-    cmor_vars2 = set(x[0].split('-')[0] for x in results)
+    cmor_vars2 = set(x[0].split(':')[0] for x in results)
     cmor_vars.update(cmor_vars2)
 
     sql = 'SELECT cmor_var FROM mapping'
@@ -160,7 +160,7 @@ def cmor_table(ctx, dbname, fname, alias, label):
     dbname : str
         Database relative path (default is data/access.db)
     fname : str
-        Mapping file??? 
+        Mapping file
     alias : str
            ??? it is used so what's ahppenw hen not passed?
     label : str
@@ -174,10 +174,10 @@ def cmor_table(ctx, dbname, fname, alias, label):
     # get list of variables already in db
     sql = "SELECT out_name, frequency, modeling_realm FROM cmorvar"
     results = query(conn, sql, first=False, logname='mopdb_log')
-    # cmor_vars is the actual cmip variable name 
-    # this sometime differs from name used in tables that can distinguish different dims/freq
+    # cmor_vars is a set with the actual cmip variable names 
+    # these sometime differ from names used in tables to distinguish different dims/freq
     cmor_vars = set(x[0] for x in results)
-    # read variable list from map_ file
+    # read variable list from map_file
     vlist = read_map(fname, alias)
     # extract cmor_var,units,dimensions,frequency,realm,cell_methods
     var_list = []
@@ -197,7 +197,8 @@ def cmor_table(ctx, dbname, fname, alias, label):
                             record = r
                             break
                 definition = list(record)
-                #definition[0] = f"{v[0]}-{alias}"
+                #definition[0] = f"{v[0]}:{alias}"
+                # why this line?
                 definition[0] = v[0].replace('_', '-')
                 definition[1] = v[6]
                 definition[2] = v[7]
