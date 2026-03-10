@@ -266,6 +266,7 @@ def update_cmor(ctx, dbname, fname, alias):
     row_dict = vardict['variable_entry']
     vars_list = []
     for name,row in row_dict.items():
+        print(name, row)
         values = process_table_row(name, row, alias)
         vars_list.append(tuple(values))
     mopdb_log.debug(f"Variables list: {vars_list}")

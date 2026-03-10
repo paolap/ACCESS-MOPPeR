@@ -182,10 +182,11 @@ def cmor_table_header(name, frequency):
 
 
 def write_cmor_table(var_list, name):
-    """
+    """Writes cmor table back to file in style used up to CMIP6Plus
+       CMIP7 format is slightly different, specifically frequency and realm
+       are not included anymore
     """
     mopdb_log = logging.getLogger('mopdb_log')
-    print(var_list[0])
     freqs = [v[1] for v in var_list]
     setf = set(freqs)
     if len(setf) > 1:
@@ -328,7 +329,7 @@ def check_realm_units(conn, var):
     cmor table.
     """
     mopdb_log = logging.getLogger('mopdb_log')
-    vname = f"{var.cmor_var}-{var.cmor_table}"
+    vname = f"{var.cmor_var}:{var.cmor_table}"
     if var.cmor_table is None or var.cmor_table == "":
         mopdb_log.warning(f"Variable: {vname} has no associated cmor_table")
     else:
@@ -476,17 +477,34 @@ def identify_patterns(files):
 
 def process_table_row(name, row, alias):
     """
+    Parameters
+    ----------
+
+    name : str
+        variable name from table
+    row : 
+    alias : str
+        alias to use to identify the table, usually table filename
+
+    Returns
+    -------
+    values : list
+        List of values to upload to db table in correct order
+
     """
-    # alter the name so it reflects also its origin
-    name = f"{name}-{alias}"
+    # alter the variable name used as index so it reflects also its original table
+    name = f"{name}:{alias}"
+    # if table definition change this needs to be updated
     cols = ['cell_methods', 'cell_measures',
             'comment', 'dimensions', 'frequency', 'long_name',
             'modeling_realm', 'ok_max_mean_abs', 'ok_min_mean_abs',
             'out_name', 'positive', 'standard_name', 'type', 'units',
             'valid_max', 'valid_min']
+    # create a list of values in correct order to populate specific variable row in table
+    # some fields can be redundant (as frequency for CMIP7)
     values = [name]
     for k in cols:
-        val = row[k] 
+        val = row.get(k, None) 
         if isinstance(val, list):
             values.append( " ".join(val) )
         else:
