@@ -33,7 +33,7 @@ from importlib.resources import files as import_files
 
 from mopper.setup_utils import (define_timeshot, adjust_nsteps,
     find_map_tables, write_var_map, write_table)
-from mopper.cmip_utils import find_cmip_tables, read_dreq_vars
+from mopper.cmip_utils import find_cmip_tables #, read_dreq_vars
 from mopdb.utils import read_yaml, write_yaml, MopException
 
 
@@ -293,10 +293,11 @@ def variable_mapping(ctx, activity_id=None):
     # Custom mode vars
     #if ctx.obj['mode'].lower() == 'custom':
     #    access_version = ctx.obj['access_version']
-    if ctx.obj['force_dreq'] is True:
-        if ctx.obj['dreq'] == 'default':
-            ctx.obj['dreq'] = import_files('mopdata').joinpath( 
-                'data/dreq/cmvme_all_piControl_3_3.csv' )
+    # disable dreq this system might change completely for cmip7
+    #if ctx.obj['force_dreq'] is True:
+    #    if ctx.obj['dreq'] == 'default':
+    #        ctx.obj['dreq'] = import_files('mopdata').joinpath( 
+    #            'data/dreq/cmvme_all_piControl_3_3.csv' )
     with ctx.obj['master_map'].open(mode='r') as f:
         reader = csv.DictReader(f, delimiter=';')
         masters = list(reader)
@@ -310,10 +311,10 @@ def variable_mapping(ctx, activity_id=None):
             varsel = create_var_map(table, masters, varsel, selection=selection[table])
     elif tables.lower() == 'all':
         mop_log.info(f"Experiment {ctx.obj['exp']}: processing all tables")
-        if ctx.obj['force_dreq']:
-            tables = find_cmip_tables(ctx.obj['dreq'])
-        else:
-            tables = find_map_tables(masters)
+        #if ctx.obj['force_dreq']:
+        #    tables = find_cmip_tables(ctx.obj['dreq'])
+        #else:
+        tables = find_map_tables(masters)
         for table in tables:
             mop_log.info(f"\n{table}:")
             varsel = create_var_map(table, masters, varsel, activity_id)

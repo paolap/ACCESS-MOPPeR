@@ -34,7 +34,7 @@ from importlib.resources import files as import_files
 from calendar import monthrange
 
 from mopdb.utils import query, write_yaml, read_yaml, MopException
-from mopper.cmip_utils import fix_years
+#from mopper.cmip_utils import fix_years
 
 
 def write_var_map(outpath, table, matches):
@@ -658,12 +658,13 @@ def add_files(ctx, cursor, opts, mp):
     exp_start = opts['exp_start']
     exp_end = opts['exp_end']
     # only used in cmip mode
-    if mp['years'] != 'all' and ctx.obj['dreq_years']:
-        exp_start, exp_end = fix_years(mp['years'], exp_start[:4], exp_end[:4]) 
-        if exp_start is None:
-            mop_log.info(f"""Years requested for variable are outside
-                specified period: {mp['years']}""")
-            return
+    # keep for the moment but disabling as dreq might change radically for cmip7 
+    #if mp['years'] != 'all' and ctx.obj['dreq_years']:
+    #    exp_start, exp_end = fix_years(mp['years'], exp_start[:4], exp_end[:4]) 
+    #    if exp_start is None:
+    #        mop_log.info(f"""Years requested for variable are outside
+    #            specified period: {mp['years']}""")
+    #        return
     # set half and full time step for each frequency
     fname = import_files('mopdata').joinpath('tstep_delta.yaml')
     tstep_dict = read_yaml(fname)['tstep_dict']
