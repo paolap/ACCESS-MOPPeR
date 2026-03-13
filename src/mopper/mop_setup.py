@@ -33,7 +33,9 @@ from importlib.resources import files as import_files
 
 from mopper.setup_utils import (define_timeshot, adjust_nsteps,
     find_map_tables, write_var_map, write_table)
-from mopper.cmip_utils import find_cmip_tables #, read_dreq_vars
+#from mopper.cmip_utils import find_cmip_tables, read_dreq_vars
+#? probably we don't need find_cmip_table as tables are in dreq var list already?
+from mopper.cmip_utils import read_dreq_vars
 from mopdb.utils import read_yaml, write_yaml, MopException
 
 
@@ -285,19 +287,15 @@ def variable_mapping(ctx, activity_id=None):
         if sublist is None:
             mop_log.error("var_subset is True but file with variable list not provided")
             raise MopException("var_subset is True but file with variable list not provided")
-        elif Path(sublist).suffix not in ['.yaml', '.yml']:
-            mop_log.error(f"{sublist} should be a yaml file")
-            raise MopException(f"{sublist} should be a yaml file")
+        elif Path(sublist).suffix not in ['.yaml', '.yml', 'json']:
+            mop_log.error(f"{sublist} should be a yaml or dreq json file")
+            raise MopException(f"{sublist} should be a yaml or json file")
         else:
             sublist = ctx.obj['appdir'] / sublist
-    # Custom mode vars
-    #if ctx.obj['mode'].lower() == 'custom':
-    #    access_version = ctx.obj['access_version']
-    # disable dreq this system might change completely for cmip7
-    #if ctx.obj['force_dreq'] is True:
-    #    if ctx.obj['dreq'] == 'default':
-    #        ctx.obj['dreq'] = import_files('mopdata').joinpath( 
-    #            'data/dreq/cmvme_all_piControl_3_3.csv' )
+    # Identify dreq
+    #? not sure if this is needed but let's set it here
+    if Path(sublist).suffix == 'json':
+        dreq = True
     with ctx.obj['master_map'].open(mode='r') as f:
         reader = csv.DictReader(f, delimiter=';')
         masters = list(reader)
@@ -311,9 +309,6 @@ def variable_mapping(ctx, activity_id=None):
             varsel = create_var_map(table, masters, varsel, selection=selection[table])
     elif tables.lower() == 'all':
         mop_log.info(f"Experiment {ctx.obj['exp']}: processing all tables")
-        #if ctx.obj['force_dreq']:
-        #    tables = find_cmip_tables(ctx.obj['dreq'])
-        #else:
         tables = find_map_tables(masters)
         for table in tables:
             mop_log.info(f"\n{table}:")

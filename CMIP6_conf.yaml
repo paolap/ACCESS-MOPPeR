@@ -63,13 +63,7 @@ cmor:
     # model vertical levels number
     levnum: 85
     # Mappings, vocab and tables settings
-    # default=data/dreq/cmvme_all_piControl_3_3.csv
-    # dreq not available for CMIP6Plus
-    dreq: default
-    # Set to true to use dreq
-    # It should be False for CMIP6Plus
-    force_dreq: !!bool True
-    dreq_years: !!bool False
+    #dreq_years: !!bool False
     # mapping file created with cli_db.py based on the actual model output
     master_map: "data/master_cm000.csv"
     # use this to indicate the path used for new or modified tables

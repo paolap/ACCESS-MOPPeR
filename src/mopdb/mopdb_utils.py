@@ -325,8 +325,8 @@ def remove_duplicate(vlist, extra=[], strict=True):
 
 
 def check_realm_units(conn, var):
-    """Checks that realm and units are consistent with values in 
-    cmor table.
+    """Checks that realm and units from file are consistent
+    with values in cmor table.
     """
     mopdb_log = logging.getLogger('mopdb_log')
     vname = f"{var.cmor_var}:{var.cmor_table}"

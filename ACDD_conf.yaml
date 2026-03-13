@@ -59,11 +59,6 @@ cmor:
     # model vertical levels number
     levnum: 85 
     # Mappings, vocab and tables settings
-    # default=data/dreq/cmvme_all_piControl_3_3.csv
-    # Leave as set unless publishing for CMIP6
-    dreq: default
-    force_dreq: !!bool False
-    dreq_years: !!bool False
     # mapping file created with cli_db.py based on the actual model output
     master_map: "localdata/map_expname.csv"
     # CMOR tables path, these define what variables can be extracted

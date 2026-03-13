@@ -18,7 +18,7 @@
 # originally written for CMIP5 by Peter Uhe and dapted for CMIP6 by Chloe Mackallah
 # ( https://doi.org/10.5281/zenodo.7703469 )
 #
-# last updated 08/10/2024
+# last updated 13/03/2026
 #
 # This file contains functions needed when processing CMIP files via dreq
 
@@ -30,6 +30,7 @@ from collections import OrderedDict
 
 from mopdb.utils import MopException
 
+# probably not neede anymore
 def find_cmip_tables(dreq):
     """
     Returns
@@ -45,7 +46,7 @@ def find_cmip_tables(dreq):
     f.close()
     return tables
 
-
+# probably not needed anymore
 def reallocate_years(years, reference_date):
     """Reallocate years based on dreq years 
     Not sure what it does need to ask Chloe
@@ -58,6 +59,7 @@ def reallocate_years(years, reference_date):
     return years
 
 
+# probably not needed anymore
 def fix_years(years, tstart, tend):
     """Update start and end date for experiment based on dreq
     constraints for years. It is called only if dreq and dreq_years are True
@@ -94,18 +96,13 @@ def fix_years(years, tstart, tend):
 
 
 @click.pass_context
-def read_dreq_vars(ctx, table_id, activity_id):
-    """Reads dreq variables file and returns a list of variables included in
-    activity_id and experiment_id, also return dreq_years list
+def read_dreq_vars(ctx):
+    """Reads dreq variables json file and extract them for tool 
 
     Parameters
     ----------
     ctx : click context
         Includes obj dict with 'cmor' settings, exp attributes
-    table_id : str
-        CMIP table id
-    activity_id: str
-        CMIP activity_id
 
     Returns
     -------
@@ -113,37 +110,18 @@ def read_dreq_vars(ctx, table_id, activity_id):
         Dictionary where keys are cmor name of selected variables and
         values are corresponding dreq years
     """
-    with open(ctx.obj['dreq'], 'r') as f:
-        reader = csv.reader(f, delimiter='\t')
-        dreq_variables = {} 
-        for row in reader:
-            if (row[0] == table_id) and (row[12] not in ['', 'CMOR Name']):
-                cmorname = row[12]
-                mips = row[28].split(',')
-                if activity_id not in mips:
-                    continue
-                try:
-                    #PP if years==rangeplu surely calling this function will fail
-                    # in any cas eis really unclear what reallocate years does and why, it returns different years
-                    # if ref date before 1850???
-                    if 'range' in row[31]:
-                        years = reallocate_years(
-                                ast.literal_eval(row[31]), ctx.obj['reference_date'])
-                        years = f'"{years}"'
-                    elif 'All' in row[31]:
-                        years = 'all'
-                    else:
-                        try:
-                            years = ast.literal_eval(row[31])
-                            years = reallocate_years(years, ctx.obj['reference_date'])
-                            years = f'"{years}"'
-                        except Exception as e:
-                            years = 'all'
-                except Exception as e:
-                    years = 'all'
-                dreq_variables[cmorname] = years
-    f.close()
-    return dreq_variables
+    with open('hist1950_core.json', 'r') as fjson:
+        dreq_dict = json.load(fjson)
+    experiments = dreq_dict['experiment']
+    for exp in experiments:
+        priorities = experiments[exp]
+        for lev in priorities:
+            for v in priorities[lev]:
+                table, var, brand, frq, region = v.split(".")
+                if table not in variables.keys():
+                    variables[table] = []
+                variables[table].append(tuple([var, brand, frq, region]))
+    return variables
 
 
 def edit_json_cv(json_cv, attrs):
