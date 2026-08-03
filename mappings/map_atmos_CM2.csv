@@ -117,7 +117,7 @@ sfcWind;fld_s03i230;;m s-1;time lat lon;longitude latitude time height10m;mon;at
 sfcWind;fld_s03i230;;m s-1;time lat lon;longitude latitude time height10m;day;atmos;area: time: mean;;MIP_APday;CM2;float32;110592;74772;cm000a.pd;10 METRE WIND SPEED ON C GRID;wind_speed
 sfcWindmax;fld_s03i230_max;;m s-1;time lat lon;longitude latitude time height10m;day;atmos;area: time: maximum;;MIP_APday;CM2;float32;110592;74772;cm000a.pd;10 METRE WIND SPEED ON C GRID;wind_speed
 sftlf;fld_s03i395;var[0].isel(time=0);1;time lat lon;longitude latitude;fx;atmos;area: time: mean;;MIP_APfx;CM2;float32;110592;12;cw323a.pm;FRACTION OF LAND;land_area_fraction
-siconca;fld_s00i031;;1;time lat lon;time lat lon;mon;atmos;area: time: mean;;MIP_SImon;CM2;float32;110592;2400;da130a.pm;FRAC OF SEA ICE IN SEA AFTER TSTEP;sea_ice_area_fraction
+siconca;fld_s00i031;;1;time lat lon;longitude latitude time;mon;atmos;area: time: mean;;MIP_SImon;CM2;float32;110592;2400;da130a.pm;FRAC OF SEA ICE IN SEA AFTER TSTEP;sea_ice_area_fraction
 ta;fld_s30i294;;K;time pressure lat lon;longitude latitude plev19 time;mon;atmos;area: time: mean;;MIP_APmon;CM2;float32;2101248;12;cw323a.pm;TEMPERATURE ON P LEV/T GRID;air_temperature
 ta;fld_s30i204;;K;time pressure lat_v lon_u;longitude latitude plev19 time;mon;atmos;area: time: mean;;MIP_APmon;CM2;float32;2115840;2081;cm000a.pm;TEMPERATURE ON P LEV/UV GRID;air_temperature
 ta19;fld_s30i294;;K;time pressure lat lon;longitude latitude plev19 time1;6hrPt;atmos;area: time: point;;CM2_6hr;CM2;float32;331776;289440;cm000a.p7;TEMPERATURE ON 19 P LEV/T GRID;air_temperature
