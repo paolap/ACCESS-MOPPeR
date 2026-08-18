@@ -267,9 +267,12 @@ def mop_process(obj):
         return 4 
 
     # Select files to use and associate a path, time dim to each input variable
-    path_vars = get_files(obj)
+    # first attempt to retrieve coords for 1st var
+    path_vars, coords1 = get_files(obj)
     # Open input datasets based on input files, return dict= {var: ds}
     dsin, in_units, in_missing, positive, coords = load_data(obj, path_vars)
+    if coords == []:
+        coords = coords1
     var1 = obj['vin'][0]
 
     # Extract variable and calculation:

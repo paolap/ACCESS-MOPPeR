@@ -165,7 +165,7 @@ def get_files(obj):
     """
     # Returns file list for each input var and list of vars for each file pattern
     var_log = logging.getLogger(obj['var_log'])
-    path_vars = find_all_files(obj)
+    path_vars, coords = find_all_files(obj)
     var_log.debug(f"get_files, path_vars size: {len(path_vars)}")
     # step 2 
     # step 3/4
@@ -191,7 +191,7 @@ def get_files(obj):
         if v['duplicate'] != '':
             path_vars[pat]['files'] = path_vars[v['duplicate']]['files']
     
-    return path_vars
+    return path_vars, coords
 
 
 def find_all_files(obj):
@@ -229,7 +229,7 @@ def find_all_files(obj):
     while len(missing) > 0 and i < len(patterns):
         pat = patterns[i]
         files = path_vars[pat]['files']
-        missing, found, duplicate = check_vars_in_file(obj, missing, files[0])
+        missing, found, duplicate, coords = check_vars_in_file(obj, missing, files[0])
         var_log.debug(f"calling add_var_path: found {found}, duplicate {duplicate}")
         # if there are variables with different time axes duplicate paths 
         path_vars = add_var_path(obj, path_vars, pat, files, found, duplicate)
@@ -237,7 +237,7 @@ def find_all_files(obj):
     # if we couldn't find a variable check other files in same directory
     if len(missing) > 0:
         var_log.error(f"Input vars: {missing} not in files {obj['infile']}")
-    return path_vars 
+    return path_vars, coords 
 
 
 def add_var_path(obj, path_vars, pat, files, found, duplicate):
@@ -285,10 +285,13 @@ def check_vars_in_file(obj, invars, fname):
         if td != []:
             tdims.append(td[0]) 
         var_log.debug(f"tdim list {tdims}")
+        # attempt to find coordinates for first var at this level
+        coords = ds[v].encoding.get('coordinates', '')
+        coords = coords.split()
     if len(tdims) > 1:
         duplicate = True
         var_log.debug("Found variables with different time axis in calculation")
-    return tofind, found, duplicate
+    return tofind, found, duplicate, coords
 
 
 def get_time_dim(obj, ds):
@@ -509,6 +512,7 @@ def load_data(obj, path_vars):
             var_log.debug(f"load_data: getting attrs for {first}")
             in_units, in_missing, positive, coords = get_attrs(obj,
                 dsin, first)
+            var_log.debug(f"load_data: coords from 1st file {coords}")
         var_log.debug(f"load_data: decoding time axis")
         dsin = xr.decode_cf(dsin, use_cftime=True)
         if (tdim is not None and 'fx' not in obj['frequency'] and
